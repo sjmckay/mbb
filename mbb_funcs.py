@@ -22,7 +22,7 @@ def ot_mbb(Nbb, beta, T, l, z):
     Tcmbz = Tcmb0*(1+z)
     Tz = (T**(4+beta)  +  (Tcmb0)**(4+beta) * ((1+z)**(4+beta)-1) ) **(1/(4+beta))
     result = (1 - (planckbb(l,Tcmbz)/planckbb(l,Tz))) * (Tz/T)**(4+beta) \
-            * 10.0**Nbb *(l0/c)**beta * 2*h / c**2 * (c/(l*1.e-6))**(beta+3)/(np.exp(h*c/(l*1e-6*k_B*T))-1)
+            * 10.0**Nbb *(l0*1e-6/c)**beta * 2*h / c**2 * (c/(l*1.e-6))**(beta+3)/(np.exp(h*c/(l*1e-6*k_B*T))-1)
     return result
 
 def go_mbb(Nbb, beta, T, l, z):
@@ -34,17 +34,17 @@ def go_mbb(Nbb, beta, T, l, z):
     return result
 
 def ot_pl(Nbb, beta, T, alpha, l,z):
-    l_c = 0.75*(T*(alpha*7.243e-5 + 1.905e-4)+ (alpha*6.246 + 26.68)**(-2))**(-1)
-    Npl = 10.0**Nbb *(l0/c)**beta * 2*h / c**2 * (c/(l*1e-6))**(beta+3)*(c/(l_c*1e-6))**3\
+    l_c = 0.75*(T*(alpha*7.243e-5 + 1.905e-4))**(-1)
+    Npl = 10.0**Nbb *(l0*1e-6/c)**beta * 2*h / c**2 * (c/(l_c*1e-6))**(beta+3)\
             /(np.exp(h*c/(l_c*1e-6*k_B*T))-1.0)/((l_c*1e-6)**alpha)
     result = Npl*(l*1e-6)**alpha * np.exp(-(l/l_c)**2)
     return result
 
 def go_pl(Nbb, beta, T, alpha, l,z):
     l_c = 0.75*(T*(alpha*7.243e-5 + 1.905e-4)+ (alpha*6.246 + 26.68)**(-2))**(-1)
-    Npl = 10.0**Nbb* 2*h / c**2 *((1.0 - np.exp(-(l0/l_c)**beta))*(c/(l_c*1e-6))**3)\
-            /(np.exp(h*c/(l_c**1e-6*k_B*T))-1.0)/((l_c*1e-6)**alpha)
-    result = Npl*(l*1e-6)**alpha * np.exp(-(l/l_c)**2)
+    Npl = 10.0**Nbb * 2*h / c**2 * ((1.0 - np.exp(-(l0/l_c)**beta)) * (c/(l_c*1e-6))**3)\
+            /(np.exp(h*c/(l_c*1e-6*k_B*T))-1.0)/((l_c*1e-6)**alpha)
+    result = Npl * (l*1e-6)**alpha * np.exp(-(l/l_c)**2)
     return result
 
 
