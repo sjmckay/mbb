@@ -208,7 +208,7 @@ class ModifiedBlackBody:
             else: return mbb_fun_go
 
     def _lnlike(self, theta, x,y,yerr):
-        yerr[yerr==0]=-1
+        # TODO: add error checking
         ymodel = self.model(theta,x, z=self.z)
         wres = np.sum(((y-ymodel)/yerr)**2)
         lnlike = -0.5*wres
@@ -218,8 +218,7 @@ class ModifiedBlackBody:
         
     def _lnprior(self,theta):
         #assign variable parameter values
-        Nbb = theta[0] # norm constant for greybody (gb)
-        T = theta[1] # temperature of gb in K    
+        T = theta[1]
         if T > 10 and T < 100:
             if len(theta) > 2: 
                 beta = theta[2] # emissivity index (set to p[2] if enough data points in FIR)
