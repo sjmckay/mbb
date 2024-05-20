@@ -16,6 +16,8 @@ DEF_ALPHA = 2.0 #default alpha
 Tcmb0 = 2.75
 l0=200
 
+# note in all cases, lambda (l) is in microns and rest frame. These functions return model values in Janskys 
+
 def ot_mbb(Nbb, beta, T, l, z):
     Tcmbz = Tcmb0*(1+z)
     Tz = (T**(4+beta)  +  (Tcmb0)**(4+beta) * ((1+z)**(4+beta)-1) ) **(1/(4+beta))

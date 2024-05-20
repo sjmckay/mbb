@@ -112,9 +112,9 @@ class ModifiedBlackBody:
             y, lb,ub = self._get_model_spread(x)
         else: y = self.eval(x)
         if obs_frame == True:
+            x *= (1.+self.z)
             ax.set(xlabel = r'$\lambda$ observed-frame [$\mu$m]', ylabel = 'Flux [mJy]')
         else:
-            x /= (1.+self.z)
             ax.set(xlabel = r'$\lambda$ rest-frame [$\mu$m]', ylabel = 'Flux [mJy]')
         ax.plot(x,y*1000, ls='-',linewidth=0.7,color='k')
         if hasattr(self, 'result'): 
@@ -123,9 +123,9 @@ class ModifiedBlackBody:
         if hasattr(self,'phot'):
             #initialize fitting arrays
             if obs_frame == True:
-                fit_wl = self.phot[0]
+                fit_wl = self.phot[0] * (1+self.z)
             else:
-                fit_wl = self.phot[0] / (1+self.z)
+                fit_wl = self.phot[0] 
             fit_flux = 1000*self.phot[1] #mJy
             fit_err = 1000*self.phot[2]
             # check for nondetections and or incorrect input
@@ -137,10 +137,10 @@ class ModifiedBlackBody:
                         c='r', ls='', marker = 'o', ms = 3,
                         elinewidth=0.5, capsize = 1.5, ecolor = 'r')
         ax.set(xscale='log', yscale='log')
-        ax.set(xlim = (x.min(), x.max()*0.7), ylim=(1e-1,2e2))
-        ax.annotate(f'z = {np.round(self.z,2)}', xy=(0.02, 0.95), xycoords = 'axes fraction')
-        ax.annotate(r'$\beta$ '+f'= {np.round(self.beta,2)}', xy=(0.02, 0.90), xycoords = 'axes fraction')
-        ax.annotate(r'$T$ '+f'= {np.round(self.T,1)} K', xy=(0.02, 0.85), xycoords = 'axes fraction')
+        ax.set(xlim = (x.min(), x.max()*0.1), ylim=(1e-1,2e2))
+        ax.annotate(f'z = {np.round(float(self.z),2)}', xy=(0.02, 0.93), xycoords = 'axes fraction')
+        ax.annotate(r'$\beta$ '+f'= {np.round(self.beta,2)}', xy=(0.02, 0.86), xycoords = 'axes fraction')
+        ax.annotate(r'$T$ '+f'= {np.round(self.T,1)} K', xy=(0.02, 0.79), xycoords = 'axes fraction')
         return fig, ax
     
     def plot_corner(self):
