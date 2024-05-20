@@ -63,10 +63,8 @@ class ModifiedBlackBody:
         Fit a modified blackbody to rest-frame photometry in Janskys, wavelengths in microns.
         Returns a mbb instance with the best-fit parameters of the fit.
         """
-        fitwl = np.asarray(phot[0])
-        fitflux = np.asarray(phot[1])
-        fiterr = np.asarray(phot[2])
-        self.phot = (fitwl,fitflux,fiterr)
+        phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
+        self.phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
         init = [self.N,self.T,self.beta]
 
         if len(phot) < 3:
@@ -107,7 +105,7 @@ class ModifiedBlackBody:
     def plot_sed(self, obs_frame=False):
         '''plot the rest-frame form of this mbb just for basic visualization. It is recommended 
         to use a separate, more detailed plotting function for figures.'''
-        fig, ax = plt.subplots(figsize=(5,4),dpi=180) 
+        fig, ax = plt.subplots(figsize=(5,4),dpi=120) 
         x = np.logspace(1,4,500)
         if hasattr(self, 'result'):
             nsamples = 200
@@ -136,17 +134,23 @@ class ModifiedBlackBody:
             fit_flux = fit_flux[~mask]
             fit_err = fit_err[~mask]
             ax.errorbar(fit_wl, fit_flux, fit_err, 
-                        c='r', ls='', marker = 'o', ms = 5,
-                        elinewidth=0.5, capsize = 1.5, ecolor = 'k')
+                        c='r', ls='', marker = 'o', ms = 3,
+                        elinewidth=0.5, capsize = 1.5, ecolor = 'r')
         ax.set(xscale='log', yscale='log')
         ax.set(xlim = (x.min(), x.max()*0.7), ylim=(1e-1,2e2))
         ax.annotate(f'z = {np.round(self.z,2)}', xy=(0.02, 0.95), xycoords = 'axes fraction')
-        ax.annotate(f'beta = {np.round(self.beta,2)}', xy=(0.02, 0.90), xycoords = 'axes fraction')
-        ax.annotate(f'T = {np.round(self.T,1)} K', xy=(0.02, 0.85), xycoords = 'axes fraction')
+        ax.annotate(r'$\beta$ '+f'= {np.round(self.beta,2)}', xy=(0.02, 0.90), xycoords = 'axes fraction')
+        ax.annotate(r'$T$ '+f'= {np.round(self.T,1)} K', xy=(0.02, 0.85), xycoords = 'axes fraction')
         return fig, ax
     
     def plot_corner(self):
-        raise NotImplementedError()
+        fig = corner.corner(
+        self.result['sampler'].flatchain, 
+        labels=[r'$N$',r'$T$',r'$\beta$'], 
+        quantiles=(0.16,0.5,0.84),
+        show_titles=True
+        )
+        return fig
 
     def eval(self, wl,z=0):
         """Return evaulation of this MBB's function if observed at the given wavelengths wl
