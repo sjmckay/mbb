@@ -38,7 +38,7 @@ LHI = 1000
 
 from mbb_model.mbb_funcs import mbb_fun_ot, mbb_fun_go, mbb_fun_go_pl, mbb_fun_ot_pl, planckbb
 
-class ModifiedBlackBody:
+class ModifiedBlackbody:
 
     def __init__(self, L, T, beta, z, opthin=True, pl=False):
         """Class to represent a modified blackbody (MBB) SED fit roughly following Casey et al. (2012),
