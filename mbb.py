@@ -34,9 +34,7 @@ CURRENT_Z = 0
 LLO = 8
 LHI = 1000
 
-#####################################################
-# NEXT TODO: need to remove units from mbb_funcs and only assign or remove them outside
-######################################################
+
 
 from mbb_model.mbb_funcs import mbb_fun_ot, mbb_fun_go, mbb_fun_go_pl, mbb_fun_ot_pl, planckbb
 
@@ -78,7 +76,7 @@ class ModifiedBlackBody:
         result = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, lnprob=self._lnprob, 
             ndim=ndim, data = self.phot)
         self.result = result
-        medtheta = self._get_med_theta(result)
+        medtheta = self._get_med_theta()
         self.update(*medtheta[1])
 
     def update_L(self, L, T, beta):
@@ -109,16 +107,21 @@ class ModifiedBlackBody:
     def plot_sed(self, obs_frame=False):
         '''plot the rest-frame form of this mbb just for basic visualization. It is recommended 
         to use a separate, more detailed plotting function for figures.'''
-        fig, ax = plt.subplots()
-        x = np.logspace(1,3.5,200)
-        y = 1000 * self.eval(x)
+        fig, ax = plt.subplots(figsize=(5,4),dpi=180) 
+        x = np.logspace(1,4,500)
+        if hasattr(self, 'result'):
+            nsamples = 200
+            y, lb,ub = self._get_model_spread(x)
+        else: y = self.eval(x)
         if obs_frame == True:
             ax.set(xlabel = r'$\lambda$ observed-frame [$\mu$m]', ylabel = 'Flux [mJy]')
         else:
             x /= (1.+self.z)
             ax.set(xlabel = r'$\lambda$ rest-frame [$\mu$m]', ylabel = 'Flux [mJy]')
-        ax.plot(x,y, ls='--',linewidth=1.0)
-        
+        ax.plot(x,y*1000, ls='-',linewidth=0.7,color='k')
+        if hasattr(self, 'result'): 
+            ax.fill_between(x,lb*1000,ub*1000,color='steelblue',alpha=0.3)
+
         if hasattr(self,'phot'):
             #initialize fitting arrays
             if obs_frame == True:
@@ -136,10 +139,10 @@ class ModifiedBlackBody:
                         c='r', ls='', marker = 'o', ms = 5,
                         elinewidth=0.5, capsize = 1.5, ecolor = 'k')
         ax.set(xscale='log', yscale='log')
-        ax.set(xlim = (x.min(), x.max()*1.1), ylim=(1e-1,2e2))
-        ax.annotate(f'z = {np.round(self.z,2)}', xy=(0.02, 0.90), xycoords = 'axes fraction')
-        ax.annotate(f'beta = {np.round(self.beta,2)}', xy=(0.02, 0.85), xycoords = 'axes fraction')
-        ax.annotate(f'T = {np.round(self.T,1)} K', xy=(0.02, 0.80), xycoords = 'axes fraction')
+        ax.set(xlim = (x.min(), x.max()*0.7), ylim=(1e-1,2e2))
+        ax.annotate(f'z = {np.round(self.z,2)}', xy=(0.02, 0.95), xycoords = 'axes fraction')
+        ax.annotate(f'beta = {np.round(self.beta,2)}', xy=(0.02, 0.90), xycoords = 'axes fraction')
+        ax.annotate(f'T = {np.round(self.T,1)} K', xy=(0.02, 0.85), xycoords = 'axes fraction')
         return fig, ax
     
     def plot_corner(self):
@@ -169,24 +172,26 @@ class ModifiedBlackBody:
             print("Running burn-in...")
             p0, _, _ = sampler.run_mcmc(p0, NBURN,progress=True)
             sampler.reset()
-            print("Running production...")
+            print("Running fitter...")
             pos, prob, state = sampler.run_mcmc(p0, niter,progress=True)
             print("Done\n")
             return {'sampler':sampler, 'pos':pos, 'prob':prob, 'state':state}  
     
-    def _get_model_spread(self, lam, nsamples, flattened_chain, z):
+    def _get_model_spread(self, lam, nsamples=200):
         models = []
-        draw = np.floor(np.random.uniform(0,len(flattened_chain),size=nsamples)).astype(int)
+        flattened_chain = self.result['sampler'].flatchain
+        draw = np.floor(np.random.uniform(0,len(flattened_chain),
+            size=nsamples)).astype(int)
         thetas = flattened_chain[draw]
         for i in thetas:
-            mod = self.model(i,lam,z=z)
+            mod = self.model(i,lam,z=self.z)
             models.append(mod)
         spread = np.std(models, axis=0)
         lb,med_model,ub = np.percentile(models,[16,50,84],axis=0)
         return med_model, lb, ub
 
-    def _get_med_theta(self, result):
-        thetas = result['sampler'].flatchain
+    def _get_med_theta(self):
+        thetas = self.result['sampler'].flatchain
         theta_res = np.percentile(thetas,[16,50,84],axis=0)
         return theta_res
 
