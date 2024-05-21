@@ -8,7 +8,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import re
-from multiprocessing import Pool
 
 import emcee
 import corner
@@ -21,6 +20,10 @@ from astropy.constants import c, k_B, h
 from astropy.cosmology import FlatLambdaCDM
 cosmo = FlatLambdaCDM(H0=70.0, Om0=0.30) 
 
+from multiprocessing import Pool
+from multiprocessing import cpu_count
+
+NCPU = cpu_count()
 
 Tcmb0 = 2.75
 
@@ -42,7 +45,9 @@ class ModifiedBlackbody:
 
     def __init__(self, L, T, beta, z, opthin=True, pl=False):
         """Class to represent a modified blackbody (MBB) SED fit roughly following Casey et al. (2012),
-         which can be plotted or fit to photometry."""
+         which can be plotted or fit to photometry.
+
+         TODO: add parameters and descriptions of methods"""
         self.L = L
         self.T = T 
         self.beta = beta 
@@ -72,7 +77,7 @@ class ModifiedBlackbody:
         ndim=len(init)
         p0 = [np.array(init) + stepsize * np.random.randn(ndim) for i in range(nwalkers)]
         result = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, lnprob=self._lnprob, 
-            ndim=ndim, data = self.phot)
+            ndim=ndim)#, data = self.phot)
         self.result = result
         medtheta = self._get_med_theta()
         self.update(*medtheta[1])
@@ -214,16 +219,17 @@ class ModifiedBlackbody:
             lum = np.sum(4*np.pi*DL**2 * self._eval_mbb(lam[:-1],N,T,beta) * dnu)/(1+z)
             return lum.to(u.Lsun)
     
-    def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,data):
-        with Pool() as pool:
-            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=data, pool=pool)
+    def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCPU):
+        print(ncores)
+        with Pool(ncores) as pool:
+            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool)
             print("Running burn-in...")
             p0, _, _ = sampler.run_mcmc(p0, NBURN,progress=True)
             sampler.reset()
             print("Running fitter...")
             pos, prob, state = sampler.run_mcmc(p0, niter,progress=True)
             print("Done\n")
-            return {'sampler':sampler, 'pos':pos, 'prob':prob, 'state':state}  
+        return {'sampler':sampler, 'pos':pos, 'prob':prob, 'state':state}  
     
     def _get_model_spread(self, lam, nsamples=200):
         models = []
@@ -251,8 +257,10 @@ class ModifiedBlackbody:
             if self.pl: return mbb_fun_go_pl
             else: return mbb_fun_go
 
-    def _lnlike(self, theta, x,y,yerr):
-        # TODO: add error checking
+    def _lnlike(self, theta):
+        x = self.phot[0]
+        y = self.phot[1]
+        yerr = self.phot[2]
         ymodel = self.model(theta,x, z=self.z)
         wres = np.sum(((y-ymodel)/yerr)**2)
         lnlike = -0.5*wres
@@ -261,21 +269,20 @@ class ModifiedBlackbody:
         return lnlike
         
     def _lnprior(self,theta):
-        #assign variable parameter values
         T = theta[1]
         if T > 10 and T < 100:
             if len(theta) > 2: 
-                beta = theta[2] # emissivity index (set to p[2] if enough data points in FIR)
+                beta = theta[2] 
                 if beta > 5.0 or beta < 0.1:
                     return -np.inf
             return 0.0
         else: return -np.inf 
 
-    def _lnprob(self, theta, x,y,yerr):
+    def _lnprob(self, theta):
         lp = self._lnprior(theta)
         if not np.isfinite(lp):
             return -np.inf
-        return lp + self._lnlike(theta, x,y,yerr)
+        return lp + self._lnlike(theta)
 
 
 
