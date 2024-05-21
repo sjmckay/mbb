@@ -94,14 +94,39 @@ class ModifiedBlackbody:
         self.beta = beta
         self.L = np.log10(self.get_luminosity((8,1000)).value)
 
-    def save(self, filepath):
-        '''write string version of fit to file that can be used to reinitialize'''
-        raise NotImplementedError()
+    def save_state(self, filepath):
+        '''write string version of MBB to file that can be used to reinitialize'''
+        with open(filepath,'w+') as f:
+            f.writelines('# L    T    beta    z    opthin    pl\n')
+            text = f'{np.round(np.log10(self.get_luminosity((8,1000)).value),4)}'\
+            + f'\t{np.round(self.T,4)}\t{np.round(self.beta,4)}\t{np.round(self.z,4)}\t{self.opthin}\t{self.pl}\t\n'
+            f.writelines(text)
+        return None
 
-    def load_from_file(filepath):
-        '''initialize fit from file'''
-        raise NotImplementedError()
+    @classmethod
+    def load_state_from_file(cls,filepath):
+        '''initialize MBB from file'''
+        with open(filepath, 'r') as f:
+            lines = f.readlines()
+            bits = lines[1].split('\t')
+            L = float(bits[0])
+            T = float(bits[1])
+            beta = float(bits[2])
+            z = float(bits[3])
+            if bits[4] == 'True': opthin = True
+            else: opthin = False
+            if bits[5] == 'True': pl = True
+            else: pl = False
+        return cls(L,T,beta,z,opthin,pl)
 
+    def save_out_full(self,filepath):
+        '''write out full MBB including fit and sampler'''
+        raise NotImplementedError()
+    
+    def restore(self,filepath):
+        '''read in full MBB including fit and sampler'''
+        raise NotImplementedError()
+    
     def plot_sed(self, obs_frame=False):
         '''plot the rest-frame form of this mbb just for basic visualization. It is recommended 
         to use a separate, more detailed plotting function for figures.'''
@@ -144,9 +169,18 @@ class ModifiedBlackbody:
         return fig, ax
     
     def plot_corner(self):
+        data = self.result['sampler'].flatchain[::10,:]
+        n = len(data)
+        lirs=[]
+        for i in range(len(data)):
+            lirs.append(np.log10(self._integrate_mbb(*data[i],z=self.z,
+                                 wllimits=(8,1000)).value))
+        lirs = np.asarray(lirs).reshape(len(lirs),1)
+        print(data[:,1:].shape,lirs.shape)
+        data = np.concatenate((data[:,1:], lirs),axis=1)
         fig = corner.corner(
-        self.result['sampler'].flatchain, 
-        labels=[r'$N$',r'$T$',r'$\beta$'], 
+        data, 
+        labels=[r'$T$',r'$\beta$',r'$L_{\rm IR}$',], 
         quantiles=(0.16,0.5,0.84),
         show_titles=True
         )
@@ -154,20 +188,30 @@ class ModifiedBlackbody:
 
     def eval(self, wl,z=0):
         """Return evaulation of this MBB's function if observed at the given wavelengths wl
-        shifted to redshift z, in Jy. Leave z=0 to get rest-frame evaluation."""
-        p = [self.N,self.T,self.beta]
+        shifted to redshift z, in Jy. Leave z=0 to get rest-frame evaluation.
+        This is a wrapper for eval_mbb but with the current mbb parameters supplied."""
+        return self._eval_mbb(wl, self.N,self.T,self.beta,z)
+
+    def _eval_mbb(self, wl, N, T, beta, z=0):
+        """Return evaluation of this MBB's function but with variable N, b, or T."""
+        p = [N,T,beta]
         return self.model(p, wl/(1+z), z=z)*u.Jy
 
-    def get_luminosity(self, wllimits, cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
-        """get integrated LIR luminosity between wl limits in microns"""
+    def get_luminosity(self, wllimits=(8,1000), cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
+        """get integrated LIR luminosity for the current MBB state between wl limits
+         in microns."""
+        return self._integrate_mbb(self.N,self.T,self.beta,self.z,wllimits,cosmo)
+
+    def _integrate_mbb(self,N,T,beta,z=0,wllimits=(8,1000), 
+                       cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
         if len(wllimits) == 2 and wllimits[0] < wllimits[1]:
             nulow = (con.c/(wllimits[1]*u.um)).to(u.Hz)
             nuhigh = (con.c/(wllimits[0]*u.um)).to(u.Hz)
             nu = np.linspace(nulow, nuhigh, 20000)
             dnu = nu[1:] - nu[0:-1]
-            DL = cosmo.luminosity_distance(self.z)
+            DL = cosmo.luminosity_distance(z)
             lam = nu.to(u.um, equivalencies=u.spectral()).value  
-            lum = np.sum(4*np.pi*DL**2 * self.eval(lam[:-1]) * dnu)/(1+self.z)
+            lum = np.sum(4*np.pi*DL**2 * self._eval_mbb(lam[:-1],N,T,beta) * dnu)/(1+z)
             return lum.to(u.Lsun)
     
     def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,data):
