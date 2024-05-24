@@ -47,7 +47,22 @@ class ModifiedBlackbody:
         """Class to represent a modified blackbody (MBB) SED fit roughly following Casey et al. (2012),
          which can be plotted or fit to photometry.
 
-         TODO: add parameters and descriptions of methods"""
+         Parameters
+         ----------
+
+         L (float): log10 of luminosity in solar units. If fitting data, this will set the initial guess for the fit.
+
+         T (float): dust temperature in K. If fitting data, this will set the initial guess for the fit.
+
+         beta (float): dust emissivity spectral index. If fitting data, this will set the initial guess for the fit.
+        
+         z (float): Redshift of this galaxy. 
+
+         opthin (bool): Whether or not the model should assume optically thin dust emission.
+
+         pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
+
+         """
         self.L = L
         self.T = T 
         self.beta = beta 
@@ -65,8 +80,21 @@ class ModifiedBlackbody:
 
     def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7):
         """
-        Fit a modified blackbody to rest-frame photometry in Janskys, wavelengths in microns.
-        Returns a mbb instance with the best-fit parameters of the fit.
+        Fit a modified blackbody to photometry.
+        Updates the parameters of this MBB model to the best-fit parameters of the fit, and populates the "result"
+        attribute with the fit results.
+
+        Parameters
+        ----------
+
+        phot (array-like): wavelengths and photometry, arranged as a 3 x N array (wavelength, flux, error). 
+        Wavelengths should be given as rest-frame values.
+
+        nwalkers (int): how many walkers should be used in the MCMC fit. 
+
+        niter (int): how many iterations to run in the fit.
+
+        stepsize (float): stepsize used to randomize the initial walker values. 
         """
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
         self.phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
@@ -83,7 +111,7 @@ class ModifiedBlackbody:
         self.update(*medtheta[1])
 
     def update_L(self, L, T, beta):
-        ''' update modified blackbody parameters (not redshift or model)'''
+        ''' update modified blackbody parameters (not redshift or model), given new luminosity, temperature, and emissivity. '''
         self.T = T 
         self.beta = beta
         Lcurr = np.log10(self.get_luminosity((8,1000)).value)
@@ -93,14 +121,20 @@ class ModifiedBlackbody:
         self.L = np.round(Lcurr,2)
 
     def update(self, N, T, beta):
-        ''' update modified blackbody parameters (not redshift or model)'''
+        ''' update modified blackbody parameters (not redshift or model), given new temperature,  emissivity, 
+        and N value (related to luminosity---see Casey+ 2012). '''
         self.N = N
         self.T = T 
         self.beta = beta
         self.L = np.log10(self.get_luminosity((8,1000)).value)
 
     def save_state(self, filepath):
-        '''write string version of MBB to file that can be used to reinitialize'''
+        '''write string version of ModifiedBlackbody to file that can be used to reinitialize 
+        using 'ModifiedBlackbody.load_fit_from_file' 
+
+        Parameters
+        ----------
+        filepath (str): path to where the model should be saved.'''
         with open(filepath,'w+') as f:
             f.writelines('# L    T    beta    z    opthin    pl\n')
             text = f'{np.round(np.log10(self.get_luminosity((8,1000)).value),4)}'\
@@ -110,7 +144,14 @@ class ModifiedBlackbody:
 
     @classmethod
     def load_state_from_file(cls,filepath):
-        '''initialize MBB from file'''
+        '''initialize ModifiedBlackbody from file containing parameters (created using the save_state() function 
+        of a ModifiedBlackbody() instance.
+
+        Parameters
+        ----------
+        filepath (str): path to where the model should be loaded from.
+
+        '''
         with open(filepath, 'r') as f:
             lines = f.readlines()
             bits = lines[1].split('\t')
@@ -132,10 +173,19 @@ class ModifiedBlackbody:
         '''read in full MBB including fit and sampler'''
         raise NotImplementedError()
     
-    def plot_sed(self, obs_frame=False):
+    def plot_sed(self, obs_frame=False,ax=None):
         '''plot the rest-frame form of this mbb just for basic visualization. It is recommended 
-        to use a separate, more detailed plotting function for figures.'''
-        fig, ax = plt.subplots(figsize=(5,4),dpi=120) 
+        to use a separate, more detailed plotting function for figures.
+
+        Parameters
+        ----------
+        obs_frame (bool): whether to plot against observed-frame wavelengths (default is rest frame).
+
+        ax (matplotlib.pyplot.Axes): axes to plot the model on. 
+        '''
+
+        if ax is None: fig, ax = plt.subplots(figsize=(5,4),dpi=120) 
+        else: fig = ax.get_figure()
         x = np.logspace(1,4,500)
         if hasattr(self, 'result'):
             nsamples = 200
@@ -174,6 +224,8 @@ class ModifiedBlackbody:
         return fig, ax
     
     def plot_corner(self):
+        ''' Plot a corner plot showing the results for beta, T, and L from the MCMC fit to the data.
+        '''
         data = self.result['sampler'].flatchain[::10,:]
         n = len(data)
         lirs=[]
@@ -193,21 +245,42 @@ class ModifiedBlackbody:
     def eval(self, wl,z=0):
         """Return evaulation of this MBB's function if observed at the given wavelengths wl
         shifted to redshift z, in Jy. Leave z=0 to get rest-frame evaluation.
-        This is a wrapper for eval_mbb but with the current mbb parameters supplied."""
+        This is a wrapper for eval_mbb but with the current mbb parameters supplied.
+
+        Parameters
+        ----------
+        wl (float): wavelength(s) in micron
+
+        z (float): redshift to which the model should be shifted.
+
+        """
         return self._eval_mbb(wl, self.N,self.T,self.beta,z)
 
     def _eval_mbb(self, wl, N, T, beta, z=0):
-        """Return evaluation of this MBB's function but with variable N, b, or T."""
+        """Return evaluation of this MBB's function but with variable N, b, or T. See docs for eval()"""
         p = [N,T,beta]
         return self.model(p, wl/(1+z), z=z)*u.Jy
 
     def get_luminosity(self, wllimits=(8,1000), cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
         """get integrated LIR luminosity for the current MBB state between wl limits
-         in microns."""
+         in microns.
+
+         Parameters
+         ----------
+
+
+
+         """
+
         return self._integrate_mbb(self.N,self.T,self.beta,self.z,wllimits,cosmo)
 
     def _integrate_mbb(self,N,T,beta,z=0,wllimits=(8,1000), 
                        cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
+        '''
+        Parameters
+        ----------
+        '''
+
         if len(wllimits) == 2 and wllimits[0] < wllimits[1]:
             nulow = (con.c/(wllimits[1]*u.um)).to(u.Hz)
             nuhigh = (con.c/(wllimits[0]*u.um)).to(u.Hz)
