@@ -181,7 +181,6 @@ class ModifiedBlackbody:
             lirs.append(np.log10(self._integrate_mbb(*data[i],z=self.z,
                                  wllimits=(8,1000)).value))
         lirs = np.asarray(lirs).reshape(len(lirs),1)
-        print(data[:,1:].shape,lirs.shape)
         data = np.concatenate((data[:,1:], lirs),axis=1)
         fig = corner.corner(
         data, 
@@ -220,7 +219,6 @@ class ModifiedBlackbody:
             return lum.to(u.Lsun)
     
     def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCPU):
-        print(ncores)
         with Pool(ncores) as pool:
             sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool)
             print("Running burn-in...")
@@ -261,7 +259,7 @@ class ModifiedBlackbody:
         x = self.phot[0]
         y = self.phot[1]
         yerr = self.phot[2]
-        ymodel = self.model(theta,x, z=self.z)
+        ymodel = self.model(theta, x, z=self.z)
         wres = np.sum(((y-ymodel)/yerr)**2)
         lnlike = -0.5*wres
         if np.isnan(lnlike):
