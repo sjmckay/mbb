@@ -107,7 +107,7 @@ class ModifiedBlackbody:
         result = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, lnprob=self._lnprob, 
             ndim=ndim)#, data = self.phot)
         self.result = result
-        medtheta = self._get_med_theta()
+        medtheta = self._get_theta_spread()
         self.update(*medtheta[1])
 
     def update_L(self, L, T, beta):
@@ -262,12 +262,15 @@ class ModifiedBlackbody:
         return self.model(p, wl/(1+z), z=z)*u.Jy
 
     def get_luminosity(self, wllimits=(8,1000), cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
-        """get integrated LIR luminosity for the current MBB state between wl limits
+        """get integrated LIR luminosity for the current MBB state between wavelength limits
          in microns.
 
          Parameters
          ----------
+         
+         wllimits (tuple): rest-frame wavelength limits in microns (lo, hi) between which to integrate
 
+         cosmo (astropy.cosmology): cosmology used for computing luminosity distance 
 
 
          """
@@ -277,8 +280,9 @@ class ModifiedBlackbody:
     def _integrate_mbb(self,N,T,beta,z=0,wllimits=(8,1000), 
                        cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
         '''
-        Parameters
-        ----------
+        integrate a model with given N, beta, T between wllimits in rest-frame. See docs for get_luminosity,
+        which is essentially a wrapper for this function.
+
         '''
 
         if len(wllimits) == 2 and wllimits[0] < wllimits[1]:
@@ -292,6 +296,24 @@ class ModifiedBlackbody:
             return lum.to(u.Lsun)
     
     def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCPU):
+        '''
+        Function to handle the actual MCMC fitting routine of this ModifiedBlackbody's internal model.
+
+        Parameters
+        ----------
+
+        p0: initial parameter array (usually [N, T, beta])
+
+        nwalkers: number of walkers to use in MCMC run
+
+        niter: number of iterations
+
+        ndim: dimensionality (usally len(p0))
+
+        lnprob: function used to determine logarithmic probability
+        
+        ncores: number of CPU cores to use
+        '''
         with Pool(ncores) as pool:
             sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool)
             print("Running burn-in...")
@@ -303,6 +325,16 @@ class ModifiedBlackbody:
         return {'sampler':sampler, 'pos':pos, 'prob':prob, 'state':state}  
     
     def _get_model_spread(self, lam, nsamples=200):
+        '''
+        Function to get the median, 16th, and 84th percentile of the ModifedBlackbody spectrum (posterior)
+        
+        Parameters
+        ----------
+
+        lam (array): wavelength in microns at which to sample the posterior spectrum
+
+        nsamples (int): number of samples to draw from the posterior sampler
+        '''
         models = []
         flattened_chain = self.result['sampler'].flatchain
         draw = np.floor(np.random.uniform(0,len(flattened_chain),
@@ -315,12 +347,19 @@ class ModifiedBlackbody:
         lb,med_model,ub = np.percentile(models,[16,50,84],axis=0)
         return med_model, lb, ub
 
-    def _get_med_theta(self):
+    def _get_theta_spread(self):
+        '''
+        Function to get the median, 16th, and 84th percentile of the fit parameters (called theta in emcee)
+        '''
         thetas = self.result['sampler'].flatchain
         theta_res = np.percentile(thetas,[16,50,84],axis=0)
         return theta_res
 
     def _select_model(self):
+        '''
+        choose which of the modifed blackbody models (include MIR power law? optically thin?) is appropriate 
+        based on the ModifiedBlackbody initialization arguments pl = True/False and opthin = True / False.
+        '''
         if self.opthin:
             if self.pl: return mbb_fun_ot_pl
             else: return mbb_fun_ot
