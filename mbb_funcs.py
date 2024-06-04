@@ -13,6 +13,7 @@ h = h.value
 
 DEF_BETA = 1.8 #default beta
 DEF_ALPHA = 2.0 #default alpha
+DEF_T = 32
 Tcmb0 = 2.75
 l0=200
 
@@ -52,7 +53,10 @@ def mbb_fun_ot_pl(theta,l,z=0):
     """ MBB function with powerlaw and optically thin assumption
     """
     Nbb = theta[0] # norm constant for greybody (gb)
-    T = theta[1] # temperature of gb in K
+    if len(theta) > 1:
+        T = theta[1] # temperature of gb in K
+    else:
+        T = DEF_T
     if len(theta) > 2: 
         beta = theta[2] # emissivity index (set to p[2] if enough data points in FIR)
     else:
@@ -64,7 +68,10 @@ def mbb_fun_go_pl(theta,l,z=0):
     """ MBB function with powerlaw and general opacity assumption
     """
     Nbb = theta[0] # norm constant for greybody (gb)
-    T = theta[1] # temperature of gb in K
+    if len(theta) > 1:
+        T = theta[1] # temperature of gb in K
+    else:
+        T = DEF_T
     if len(theta) > 2: 
         beta = theta[2] # emissivity index (set to p[2] if enough data points in FIR)
     else:
@@ -76,8 +83,10 @@ def mbb_fun_ot(theta,l,z=0):
     """ MBB function with no powerlaw and optically thin assumption
     """
     Nbb = theta[0] # norm constant for greybody (gb)
-    T = theta[1] # temperature of gb in K
-
+    if len(theta) > 1:
+        T = theta[1] # temperature of gb in K
+    else:
+        T = DEF_T    
     if len(theta) > 2: 
         beta = theta[2] # emissivity index (set to p[2] if enough data points in FIR)
     else:
@@ -88,7 +97,10 @@ def mbb_fun_go(theta,l,z=0):
     """ MBB function with no powerlaw and general opacity assumptions
     """
     Nbb = theta[0] # norm constant for greybody (gb)
-    T = theta[1] # temperature of gb in K
+    if len(theta) > 1:
+        T = theta[1] # temperature of gb in K
+    else:
+        T = DEF_T
     if len(theta) > 2: 
         beta = theta[2] # emissivity index (set to p[2] if enough data points in FIR)
     else:

@@ -100,8 +100,10 @@ class ModifiedBlackbody:
         self.phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
         init = [self.N,self.T,self.beta]
 
-        if len(phot) < 3:
+        if len(phot[0]) < 3:
             init = init[0:2]
+        if len(phot[0]) < 2:
+            init = init[0:1]
         ndim=len(init)
         p0 = [np.array(init) + stepsize * np.random.randn(ndim) for i in range(nwalkers)]
         result = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, lnprob=self._lnprob, 
@@ -110,22 +112,23 @@ class ModifiedBlackbody:
         medtheta = self._get_theta_spread()
         self.update(*medtheta[1])
 
-    def update_L(self, L, T, beta):
+    def update_L(self, L=None, T=None, beta=None):
         ''' update modified blackbody parameters (not redshift or model), given new luminosity, temperature, and emissivity. '''
-        self.T = T 
-        self.beta = beta
-        Lcurr = np.log10(self.get_luminosity((8,1000)).value)
-        while((Lcurr > (L+0.001)) | (Lcurr < (L-0.001))):
-            self.N = self.N * (L/Lcurr)
+        if T: self.T = T 
+        if beta: self.beta = beta
+        if L: 
             Lcurr = np.log10(self.get_luminosity((8,1000)).value)
-        self.L = np.round(Lcurr,2)
+            while((Lcurr > (L+0.001)) | (Lcurr < (L-0.001))):
+                self.N = self.N * (L/Lcurr)
+                Lcurr = np.log10(self.get_luminosity((8,1000)).value)
+            self.L = np.round(Lcurr,2)
 
-    def update(self, N, T, beta):
+    def update(self, N=None, T=None, beta=None):
         ''' update modified blackbody parameters (not redshift or model), given new temperature,  emissivity, 
         and N value (related to luminosity---see Casey+ 2012). '''
-        self.N = N
-        self.T = T 
-        self.beta = beta
+        if N: self.N = N
+        if T: self.T = T 
+        if beta: self.beta = beta
         self.L = np.log10(self.get_luminosity((8,1000)).value)
 
     def save_state(self, filepath):
@@ -379,14 +382,16 @@ class ModifiedBlackbody:
         return lnlike
         
     def _lnprior(self,theta):
-        T = theta[1]
-        if T > 10 and T < 100:
-            if len(theta) > 2: 
-                beta = theta[2] 
-                if beta > 5.0 or beta < 0.1:
-                    return -np.inf
-            return 0.0
-        else: return -np.inf 
+        if len(theta) > 1:
+            T = theta[1]
+            if T > 10 and T < 100:
+                if len(theta) > 2: 
+                    beta = theta[2] 
+                    if beta > 5.0 or beta < 0.1:
+                        return -np.inf
+                return 0.0
+            else: return -np.inf 
+        return 0.0
 
     def _lnprob(self, theta):
         lp = self._lnprior(theta)
