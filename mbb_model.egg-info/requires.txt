@@ -1,0 +1,8 @@
+matplotlib
+astropy
+numpy
+scipy
+emcee
+re
+multiprocessing
+corner
