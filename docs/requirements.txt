@@ -1,4 +1,10 @@
 sphinx_rtd_theme
 numpy
-pandas
-scikit-learn
+matplotlib
+astropy
+numpy
+scipy
+emcee
+re
+multiprocessing
+corner
