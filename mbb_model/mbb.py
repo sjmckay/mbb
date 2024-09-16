@@ -38,7 +38,7 @@ LHI = 1000
 
 
 
-from mbb_model.mbb_funcs import mbb_fun_ot, mbb_fun_go, mbb_fun_go_pl, mbb_fun_ot_pl, planckbb
+from mbb_funcs import mbb_fun_ot, mbb_fun_go, mbb_fun_go_pl, mbb_fun_ot_pl, planckbb
 
 class ModifiedBlackbody:
 
@@ -150,7 +150,7 @@ class ModifiedBlackbody:
 
     @classmethod
     def load_state_from_file(cls,filepath):
-        '''
+        '''Load state
         
         initialize ModifiedBlackbody from file containing parameters (created using the save_state() function 
         of a ModifiedBlackbody() instance.
