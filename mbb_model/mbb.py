@@ -85,14 +85,14 @@ class ModifiedBlackbody:
 
         Args:
 
-        phot (array-like): wavelengths and photometry, arranged as a 3 x N array (wavelength, flux, error). 
-        Wavelengths should be given as rest-frame values.
+            phot (array-like): wavelengths and photometry, arranged as a 3 x N array (wavelength, flux, error). 
+            Wavelengths should be given as rest-frame values.
 
-        nwalkers (int): how many walkers should be used in the MCMC fit. 
+            nwalkers (int): how many walkers should be used in the MCMC fit. 
 
-        niter (int): how many iterations to run in the fit.
+            niter (int): how many iterations to run in the fit.
 
-        stepsize (float): stepsize used to randomize the initial walker values. 
+            stepsize (float): stepsize used to randomize the initial walker values. 
 
         Returns:
         """
