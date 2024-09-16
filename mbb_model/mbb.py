@@ -150,12 +150,14 @@ class ModifiedBlackbody:
 
     @classmethod
     def load_state_from_file(cls,filepath):
-        '''initialize ModifiedBlackbody from file containing parameters (created using the save_state() function 
+        '''
+        
+        initialize ModifiedBlackbody from file containing parameters (created using the save_state() function 
         of a ModifiedBlackbody() instance.
 
         Args:
 
-        filepath (str): path to where the model should be loaded from.
+            filepath(string): path to where the model should be loaded from.
 
         Returns: 
         '''
