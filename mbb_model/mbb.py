@@ -43,23 +43,24 @@ from mbb_funcs import mbb_fun_ot, mbb_fun_go, mbb_fun_go_pl, mbb_fun_ot_pl, plan
 class ModifiedBlackbody:
 
     def __init__(self, L, T, beta, z, opthin=True, pl=False):
-        """Class to represent a modified blackbody (MBB) SED fit roughly following Casey et al. (2012),
+        """Modified blackbody class
+        
+        Class to represent a modified blackbody (MBB) SED fit roughly following Casey et al. (2012),
          which can be plotted or fit to photometry.
 
-         Parameters
-         ----------
+         Parameters:
 
-         L (float): log10 of luminosity in solar units. If fitting data, this will set the initial guess for the fit.
+            L (float): log10 of luminosity in solar units. If fitting data, this will set the initial guess for the fit.
 
-         T (float): dust temperature in K. If fitting data, this will set the initial guess for the fit.
+            T (float): dust temperature in K. If fitting data, this will set the initial guess for the fit.
 
-         beta (float): dust emissivity spectral index. If fitting data, this will set the initial guess for the fit.
-        
-         z (float): Redshift of this galaxy. 
+            beta (float): dust emissivity spectral index. If fitting data, this will set the initial guess for the fit.
+            
+            z (float): Redshift of this galaxy. 
 
-         opthin (bool): Whether or not the model should assume optically thin dust emission.
+            opthin (bool): Whether or not the model should assume optically thin dust emission.
 
-         pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
+            pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
 
          """
         self.L = L
@@ -78,7 +79,8 @@ class ModifiedBlackbody:
         self.L = np.round(Lcurr,2)
 
     def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7):
-        """
+        """Fit photometry
+
         Fit a modified blackbody to photometry.
         Updates the parameters of this MBB model to the best-fit parameters of the fit, and populates the "result"
         attribute with the fit results.
