@@ -7,4 +7,4 @@ scipy
 emcee
 multiprocessing >= 3.12
 corner
-re > = 3.12
+re >= 3.12
