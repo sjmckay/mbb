@@ -83,8 +83,7 @@ class ModifiedBlackbody:
         Updates the parameters of this MBB model to the best-fit parameters of the fit, and populates the "result"
         attribute with the fit results.
 
-        Parameters
-        ----------
+        Args:
 
         phot (array-like): wavelengths and photometry, arranged as a 3 x N array (wavelength, flux, error). 
         Wavelengths should be given as rest-frame values.
@@ -94,6 +93,8 @@ class ModifiedBlackbody:
         niter (int): how many iterations to run in the fit.
 
         stepsize (float): stepsize used to randomize the initial walker values. 
+
+        Returns:
         """
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
         self.phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
@@ -134,9 +135,12 @@ class ModifiedBlackbody:
         '''write string version of ModifiedBlackbody to file that can be used to reinitialize 
         using 'ModifiedBlackbody.load_fit_from_file' 
 
-        Parameters
-        ----------
-        filepath (str): path to where the model should be saved.'''
+        Args:
+
+        filepath (str): path to where the model should be saved.
+        
+        Returns:
+        '''
         with open(filepath,'w+') as f:
             f.writelines('# L    T    beta    z    opthin    pl\n')
             text = f'{np.round(np.log10(self.get_luminosity((8,1000)).value),4)}'\
@@ -149,10 +153,11 @@ class ModifiedBlackbody:
         '''initialize ModifiedBlackbody from file containing parameters (created using the save_state() function 
         of a ModifiedBlackbody() instance.
 
-        Parameters
-        ----------
+        Args:
+
         filepath (str): path to where the model should be loaded from.
 
+        Returns: 
         '''
         with open(filepath, 'r') as f:
             lines = f.readlines()
@@ -249,11 +254,13 @@ class ModifiedBlackbody:
         shifted to redshift z, in Jy. Leave z=0 to get rest-frame evaluation.
         This is a wrapper for eval_mbb but with the current mbb parameters supplied.
 
-        Parameters
-        ----------
+        Args:
+
         wl (float): wavelength(s) in micron
 
         z (float): redshift to which the model should be shifted.
+
+        Returns:
 
         """
         return self._eval_mbb(wl, self.N,self.T,self.beta,z)
@@ -267,13 +274,13 @@ class ModifiedBlackbody:
         """get integrated LIR luminosity for the current MBB state between wavelength limits
          in microns.
 
-         Parameters
-         ----------
+         Args:
          
          wllimits (tuple): rest-frame wavelength limits in microns (lo, hi) between which to integrate
 
          cosmo (astropy.cosmology): cosmology used for computing luminosity distance 
 
+         Returns:
 
          """
 
@@ -301,8 +308,7 @@ class ModifiedBlackbody:
         '''
         Function to handle the actual MCMC fitting routine of this ModifiedBlackbody's internal model.
 
-        Parameters
-        ----------
+        Args:
 
         p0: initial parameter array (usually [N, T, beta])
 
@@ -315,6 +321,8 @@ class ModifiedBlackbody:
         lnprob: function used to determine logarithmic probability
         
         ncores: number of CPU cores to use
+
+        Returns:
         '''
         with Pool(ncores) as pool:
             sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool)
@@ -330,12 +338,13 @@ class ModifiedBlackbody:
         '''
         Function to get the median, 16th, and 84th percentile of the ModifedBlackbody spectrum (posterior)
         
-        Parameters
-        ----------
+        Args:
 
         lam (array): wavelength in microns at which to sample the posterior spectrum
 
         nsamples (int): number of samples to draw from the posterior sampler
+
+        Returns:
         '''
         models = []
         flattened_chain = self.result['sampler'].flatchain
