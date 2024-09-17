@@ -51,6 +51,14 @@ def go_pl(Nbb, beta, T, alpha, l,z):
 
 def mbb_fun_ot_pl(theta,l,z=0):
     """ MBB function with powerlaw and optically thin assumption
+
+    Args:
+        theta (list): the parameters to vary in the fitting (usually N, T and beta)
+        l (float): the rest-frame wavelengths at which to evaluate the model.
+        z (float): the redshift of the model
+
+    Returns:
+        float: the value(s) of the model at wavelengths ``l``
     """
     Nbb = theta[0] # norm constant for greybody (gb)
     if len(theta) > 1:
@@ -66,6 +74,14 @@ def mbb_fun_ot_pl(theta,l,z=0):
     
 def mbb_fun_go_pl(theta,l,z=0):
     """ MBB function with powerlaw and general opacity assumption
+
+    Args:
+        theta (list): the parameters to vary in the fitting (usually N, T and beta)
+        l (float): the rest-frame wavelengths at which to evaluate the model.
+        z (float): the redshift of the model
+
+    Returns:
+        float: the value(s) of the model at wavelengths ``l``
     """
     Nbb = theta[0] # norm constant for greybody (gb)
     if len(theta) > 1:
@@ -81,6 +97,14 @@ def mbb_fun_go_pl(theta,l,z=0):
 
 def mbb_fun_ot(theta,l,z=0):
     """ MBB function with no powerlaw and optically thin assumption
+
+    Args:
+        theta (list): the parameters to vary in the fitting (usually N, T and beta)
+        l (float): the rest-frame wavelengths at which to evaluate the model.
+        z (float): the redshift of the model
+
+    Returns:
+        float: the value(s) of the model at wavelengths ``l``
     """
     Nbb = theta[0] # norm constant for greybody (gb)
     if len(theta) > 1:
@@ -95,6 +119,14 @@ def mbb_fun_ot(theta,l,z=0):
 
 def mbb_fun_go(theta,l,z=0):
     """ MBB function with no powerlaw and general opacity assumptions
+
+    Args:
+        theta (list): the parameters to vary in the fitting (usually N, T and beta)
+        l (float): the rest-frame wavelengths at which to evaluate the model.
+        z (float): the redshift of the model
+
+    Returns:
+        float: the value(s) of the model at wavelengths ``l``
     """
     Nbb = theta[0] # norm constant for greybody (gb)
     if len(theta) > 1:

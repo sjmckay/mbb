@@ -41,21 +41,20 @@ LHI = 1000
 from mbb_funcs import mbb_fun_ot, mbb_fun_go, mbb_fun_go_pl, mbb_fun_ot_pl, planckbb
 
 class ModifiedBlackbody:
+    """Class to represent a modified blackbody (or MBB).
+    
+    This class can be used to encapsulate a single MBB model, or to perform an SED fit to photometry. The results can be easily plotted or updated as needed, and various parameters/statistics can be extracted.
+    The models are based off of Casey et al. (2012). See :ref:`mbb_funcs` for details.
 
+    Args:
+        L (float): log10 of luminosity in solar units. If fitting data, this will set the initial guess for the fit.
+        T (float): dust temperature in K. If fitting data, this will set the initial guess for the fit.
+        beta (float): dust emissivity spectral index. If fitting data, this will set the initial guess for the fit.
+        z (float): Redshift of this galaxy.
+        opthin (bool): Whether or not the model should assume optically thin dust emission.
+        pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
+    """
     def __init__(self, L, T, beta, z, opthin=True, pl=False):
-        """Modified blackbody class.
-        
-        Class to represent a modified blackbody (MBB) SED fit roughly following Casey et al. (2012),
-        which can be plotted or fit to photometry.
-
-         Args:
-            L (float): log10 of luminosity in solar units. If fitting data, this will set the initial guess for the fit.
-            T (float): dust temperature in K. If fitting data, this will set the initial guess for the fit.
-            beta (float): dust emissivity spectral index. If fitting data, this will set the initial guess for the fit.
-            z (float): Redshift of this galaxy.
-            opthin (bool): Whether or not the model should assume optically thin dust emission.
-            pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
-         """
         self.L = L
         self.T = T 
         self.beta = beta 
@@ -76,7 +75,7 @@ class ModifiedBlackbody:
 
         Fit a modified blackbody to photometry.
         Updates the parameters of this MBB model to the best-fit parameters of the fit, and populates the "result"
-        attribute with the fit results.
+        attribute of the ModifiedBlackbody with the fit results.
 
         Args:
             phot (array-like): wavelengths and photometry, arranged as a 3 x N array (wavelength, flux, error). 
@@ -84,8 +83,6 @@ class ModifiedBlackbody:
             nwalkers (int): how many walkers should be used in the MCMC fit. 
             niter (int): how many iterations to run in the fit.
             stepsize (float): stepsize used to randomize the initial walker values. 
-
-        Returns:
         """
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
         self.phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
@@ -131,7 +128,6 @@ class ModifiedBlackbody:
         Args:
             filepath (str): path to where the model should be saved.
         
-        Returns:
         """
         with open(filepath,'w+') as f:
             f.writelines('# L    T    beta    z    opthin    pl\n')
@@ -243,7 +239,7 @@ class ModifiedBlackbody:
     def eval(self, wl,z=0):
         """Evaluate MBB at wavelength
         
-        Return evaulation of this MBB's function if observed at the given wavelengths wl
+        Return evaluation of this MBB's function if observed at the given wavelengths wl
         shifted to redshift z, in Jy. Leave z=0 to get rest-frame evaluation.
         This is a wrapper for eval_mbb but with the current mbb parameters supplied.
 
@@ -252,7 +248,7 @@ class ModifiedBlackbody:
             z (float): redshift to which the model should be shifted.
 
         Returns:
-            float: value of mbb at that wavelength
+            float: value of mbb at the wavelength ``wl``
         """
         return self._eval_mbb(wl, self.N,self.T,self.beta,z)
 
@@ -270,7 +266,7 @@ class ModifiedBlackbody:
             cosmo (astropy.cosmology): cosmology used for computing luminosity distance 
 
          Returns:
-
+            float: the luminosity integrated between rest-frame wavelength limits given by ``wllimits``
          """
 
         return self._integrate_mbb(self.N,self.T,self.beta,self.z,wllimits,cosmo)
@@ -306,6 +302,9 @@ class ModifiedBlackbody:
             ncores: number of CPU cores to use
 
         Returns:
+            Dictionary with keys ``sampler``,``pos``,``prob``, and ``state``, which encode the results of the fit.
+            ``sampler`` is the actual chain of parameter values from the MCMC run. 
+            ``pos``, ``prob``, and ``state`` are the output of the ``run_mcmc`` function from the ``emcee.EnsembleSampler <https://emcee.readthedocs.io/en/stable/user/sampler/>``_
         """
         with Pool(ncores) as pool:
             sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool)
@@ -326,6 +325,7 @@ class ModifiedBlackbody:
             nsamples (int): number of samples to draw from the posterior sampler
 
         Returns:
+            tuple of arrays (float, float, float): the median, 16th, and 84th percentile of the spectrum.
         """
         models = []
         flattened_chain = self.result['sampler'].flatchain

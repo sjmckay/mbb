@@ -11,6 +11,7 @@ Documentation for mbb_model
    :caption: Contents:
 
    mbb.rst
+   mbb_funcs.rst
 
 Indices and tables
 ==================
