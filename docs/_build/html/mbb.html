@@ -45,7 +45,23 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">ModifiedBlackbody (MBB)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ModifiedBlackbody (MBB)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mbb.ModifiedBlackbody"><code class="docutils literal notranslate"><span class="pre">ModifiedBlackbody</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mbb.ModifiedBlackbody.eval"><code class="docutils literal notranslate"><span class="pre">ModifiedBlackbody.eval()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mbb.ModifiedBlackbody.fit"><code class="docutils literal notranslate"><span class="pre">ModifiedBlackbody.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mbb.ModifiedBlackbody.get_luminosity"><code class="docutils literal notranslate"><span class="pre">ModifiedBlackbody.get_luminosity()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mbb.ModifiedBlackbody.load_state_from_file"><code class="docutils literal notranslate"><span class="pre">ModifiedBlackbody.load_state_from_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mbb.ModifiedBlackbody.plot_corner"><code class="docutils literal notranslate"><span class="pre">ModifiedBlackbody.plot_corner()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mbb.ModifiedBlackbody.plot_sed"><code class="docutils literal notranslate"><span class="pre">ModifiedBlackbody.plot_sed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mbb.ModifiedBlackbody.restore"><code class="docutils literal notranslate"><span class="pre">ModifiedBlackbody.restore()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mbb.ModifiedBlackbody.save_out_full"><code class="docutils literal notranslate"><span class="pre">ModifiedBlackbody.save_out_full()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mbb.ModifiedBlackbody.save_state"><code class="docutils literal notranslate"><span class="pre">ModifiedBlackbody.save_state()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mbb.ModifiedBlackbody.update"><code class="docutils literal notranslate"><span class="pre">ModifiedBlackbody.update()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mbb.ModifiedBlackbody.update_L"><code class="docutils literal notranslate"><span class="pre">ModifiedBlackbody.update_L()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
         </div>
@@ -75,7 +91,171 @@
   <section id="modifiedblackbody-mbb">
 <span id="mbb"></span><h1>ModifiedBlackbody (MBB)<a class="headerlink" href="#modifiedblackbody-mbb" title="Link to this heading"></a></h1>
 <p>Modified blackbody model for SED fitting. See <code class="docutils literal notranslate"><span class="pre">mbb_funcs</span></code> for possible models that can be used.</p>
-<span class="target" id="module-mbb"></span></section>
+<dl class="py class">
+<dt class="sig sig-object py" id="mbb.ModifiedBlackbody">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mbb.</span></span><span class="sig-name descname"><span class="pre">ModifiedBlackbody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opthin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="mbb.ModifiedBlackbody.eval">
+<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody.eval" title="Link to this definition"></a></dt>
+<dd><p>Evaluate MBB at wavelength</p>
+<p>Return evaulation of this MBB’s function if observed at the given wavelengths wl
+shifted to redshift z, in Jy. Leave z=0 to get rest-frame evaluation.
+This is a wrapper for eval_mbb but with the current mbb parameters supplied.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wl</strong> (<em>float</em>) – wavelength(s) in micron</p></li>
+<li><p><strong>z</strong> (<em>float</em>) – redshift to which the model should be shifted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>value of mbb at that wavelength</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mbb.ModifiedBlackbody.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nwalkers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">400</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-07</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit photometry</p>
+<p>Fit a modified blackbody to photometry.
+Updates the parameters of this MBB model to the best-fit parameters of the fit, and populates the “result”
+attribute with the fit results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phot</strong> (<em>array-like</em>) – wavelengths and photometry, arranged as a 3 x N array (wavelength, flux, error).</p></li>
+<li><p><strong>values.</strong> (<em>Wavelengths should be given as rest-frame</em>)</p></li>
+<li><p><strong>nwalkers</strong> (<em>int</em>) – how many walkers should be used in the MCMC fit.</p></li>
+<li><p><strong>niter</strong> (<em>int</em>) – how many iterations to run in the fit.</p></li>
+<li><p><strong>stepsize</strong> (<em>float</em>) – stepsize used to randomize the initial walker values.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mbb.ModifiedBlackbody.get_luminosity">
+<span class="sig-name descname"><span class="pre">get_luminosity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wllimits=(8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">1000)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cosmo=FlatLambdaCDM(H0=70.0</span> <span class="pre">km</span> <span class="pre">/</span> <span class="pre">(Mpc</span> <span class="pre">s)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Om0=0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tcmb0=0.0</span> <span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Neff=3.04</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_nu=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ob0=None)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody.get_luminosity" title="Link to this definition"></a></dt>
+<dd><p>get integrated LIR luminosity for the current MBB state between wavelength limits
+in microns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wllimits</strong> (<em>tuple</em>) – rest-frame wavelength limits in microns (lo, hi) between which to integrate</p></li>
+<li><p><strong>cosmo</strong> (<em>astropy.cosmology</em>) – cosmology used for computing luminosity distance</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mbb.ModifiedBlackbody.load_state_from_file">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_state_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody.load_state_from_file" title="Link to this definition"></a></dt>
+<dd><p>Load state</p>
+<p>initialize ModifiedBlackbody from file containing parameters (created using the save_state() function
+of a ModifiedBlackbody() instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filepath</strong> (<em>string</em>) – path to where the model should be loaded from.</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mbb.ModifiedBlackbody.plot_corner">
+<span class="sig-name descname"><span class="pre">plot_corner</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody.plot_corner" title="Link to this definition"></a></dt>
+<dd><p>Plot a corner plot showing the results for beta, T, and L from the MCMC fit to the data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mbb.ModifiedBlackbody.plot_sed">
+<span class="sig-name descname"><span class="pre">plot_sed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody.plot_sed" title="Link to this definition"></a></dt>
+<dd><p>plot the rest-frame form of this mbb just for basic visualization. It is recommended
+to use a separate, more detailed plotting function for figures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obs_frame</strong> (<em>bool</em>) – whether to plot against observed-frame wavelengths (default is rest frame).s</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.pyplot.Axes</em>) – axes to plot the model on.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mbb.ModifiedBlackbody.restore">
+<span class="sig-name descname"><span class="pre">restore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody.restore" title="Link to this definition"></a></dt>
+<dd><p>read in full MBB including fit and sampler</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mbb.ModifiedBlackbody.save_out_full">
+<span class="sig-name descname"><span class="pre">save_out_full</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody.save_out_full" title="Link to this definition"></a></dt>
+<dd><p>SFR computation</p>
+<p>Calculate the star-formation rates (SFRs) of the user-defined galaxies using the model trained on TNG data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bands</strong> (<em>list</em>) – list of strings where each string refers to a different photometric band. These are the</p></li>
+<li><p><strong>However</strong> (<em>photometric bands input by the user.</em>)</p></li>
+<li><p><strong>[</strong><strong>'u'</strong> (<em>at the moment they need to correspond to one of</em>)</p></li>
+<li><p><strong>'b'</strong></p></li>
+<li><p><strong>'v'</strong></p></li>
+<li><p><strong>'k'</strong></p></li>
+<li><p><strong>'g'</strong></p></li>
+<li><p><strong>'r'</strong></p></li>
+<li><p><strong>'i'</strong></p></li>
+<li><p><strong>'z'</strong><strong>]</strong></p></li>
+<li><p><strong>data.</strong> (<em>to match the existing TNG</em>)</p></li>
+<li><p><strong>user_data</strong> (<em>array</em>) – absolute magnitudes in each band specified in “bands.”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>SFRs of the galaxies</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mbb.ModifiedBlackbody.save_state">
+<span class="sig-name descname"><span class="pre">save_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody.save_state" title="Link to this definition"></a></dt>
+<dd><p>Save modified blackbody state</p>
+<p>write string version of ModifiedBlackbody to file that can be used to reinitialize
+using ‘ModifiedBlackbody.load_fit_from_file’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filepath</strong> (<em>str</em>) – path to where the model should be saved.</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mbb.ModifiedBlackbody.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody.update" title="Link to this definition"></a></dt>
+<dd><p>update modified blackbody parameters (not redshift or model), given new temperature,  emissivity,
+and N value (related to luminosity—see Casey+ 2012).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mbb.ModifiedBlackbody.update_L">
+<span class="sig-name descname"><span class="pre">update_L</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody.update_L" title="Link to this definition"></a></dt>
+<dd><p>update modified blackbody parameters (not redshift or model), given new luminosity, temperature, and emissivity.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 
 
            </div>

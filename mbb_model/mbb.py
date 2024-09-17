@@ -166,7 +166,20 @@ class ModifiedBlackbody:
         return cls(L,T,beta,z,opthin,pl)
 
     def save_out_full(self,filepath):
-        """write out full MBB including fit and sampler"""
+        '''SFR computation
+
+        Calculate the star-formation rates (SFRs) of the user-defined galaxies using the model trained on TNG data.
+
+        Args:
+            bands (list): list of strings where each string refers to a different photometric band. These are the 
+            photometric bands input by the user. However, at the moment they need to correspond to one of ['u', 'b', 'v', 'k', 'g', 'r', 'i', 'z']
+            to match the existing TNG data.
+            user_data (array): absolute magnitudes in each band specified in "bands."
+
+        Returns:
+            array: SFRs of the galaxies
+        '''
+        # """write out full MBB including fit and sampler"""
         raise NotImplementedError()
     
     def restore(self,filepath):
