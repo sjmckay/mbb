@@ -5,7 +5,7 @@ ModifiedBlackbody (MBB)
 
 Modified blackbody model for SED fitting. See :ref:`mbb_funcs` for possible models that can be used.
 
-More examples coming soon!
+Examples coming soon!
 
 .. _mbbclass:
 
