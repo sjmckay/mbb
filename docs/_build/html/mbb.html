@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>ModifiedBlackbody (MBB) &#8212; mbb_model 0.0.1 documentation</title>
+    <title>ModifiedBlackbody (MBB) &#8212; mbb_model</title>
   
   
   
@@ -44,7 +44,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Models to fit" href="mbb_funcs.html" />
-    <link rel="prev" title="Documentation for mbb_model" href="index.html" />
+    <link rel="prev" title="mbb_model" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">mbb_model 0.0.1 documentation</p>
+    <p class="title logo__title">mbb_model</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -148,7 +148,7 @@
  </script></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">ModifiedBlackbody (MBB)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mbb_funcs.html">Models to fit</a></li>
@@ -193,6 +193,70 @@
         <div class="header-article-item">
 
 <div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/mckay-sjm/mbb_model" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/mckay-sjm/mbb_model/edit/main/mbb.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/mckay-sjm/mbb_model/issues/new?title=Issue%20on%20page%20%2Fmbb.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
 
 
 
@@ -328,12 +392,13 @@ document.write(`
   <section id="modifiedblackbody-mbb">
 <span id="mbb"></span><h1>ModifiedBlackbody (MBB)<a class="headerlink" href="#modifiedblackbody-mbb" title="Link to this heading">#</a></h1>
 <p>Modified blackbody model for SED fitting. See <a class="reference internal" href="mbb_funcs.html#mbb-funcs"><span class="std std-ref">Models to fit</span></a> for possible models that can be used.</p>
+<p>More examples coming soon!</p>
 <dl class="py class" id="mbbclass">
 <dt class="sig sig-object py" id="mbb.ModifiedBlackbody">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mbb.</span></span><span class="sig-name descname"><span class="pre">ModifiedBlackbody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opthin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.ModifiedBlackbody" title="Link to this definition">#</a></dt>
 <dd><p>Class to represent a modified blackbody (or MBB).</p>
 <p>This class can be used to encapsulate a single MBB model, or to perform an SED fit to photometry. The results can be easily plotted or updated as needed, and various parameters/statistics can be extracted.
-The models are based off of Casey et al. (2012). See <a class="reference internal" href="mbb_funcs.html#mbb-funcs"><span class="std std-ref">Models to fit</span></a> for details.</p>
+The models are based off of <a class="reference external" href="https://doi.org/10.1111/j.1365-2966.2012.21455.x">Casey et al. (2012)</a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -504,7 +569,7 @@ and N value (related to luminosity—see Casey+ 2012).</p>
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Documentation for mbb_model</p>
+        <p class="prev-next-title">mbb_model</p>
       </div>
     </a>
     <a class="right-next"

@@ -31,4 +31,13 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
+html_title = "mbb_model"
 autoclass_content = 'both'
+html_theme_options = {
+    "repository_url": "https://github.com/mckay-sjm/mbb_model",
+    "repository_branch": "main",
+    "use_edit_page_button": True,
+    "use_issues_button": True,
+    "use_repository_button": True,
+    "use_download_button": True,
+}
