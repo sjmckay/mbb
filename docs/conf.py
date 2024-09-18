@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../mbb/'))
 project = 'mbb'
 copyright = '2024, Stephen McKay'
 author = 'Stephen McKay'
-release = '0.0.3'
+release = '0.0.5'
 root_doc = "index"
 
 # -- General configuration ---------------------------------------------------
