@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: mbb
-Version: 0.0.5
+Version: 0.0.6
 License-File: LICENSE
 Requires-Dist: matplotlib
 Requires-Dist: astropy

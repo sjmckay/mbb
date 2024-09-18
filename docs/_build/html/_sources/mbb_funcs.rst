@@ -9,5 +9,5 @@ with optional mid-infrared powerlaw (slope fixed to ``alpha=2.0``) and the choic
 
 To choose a given model, use the ``pl`` (powerlaw) and/or ``opthin`` (optically thin) flags when intializing a ModifiedBlackbody instance.
 
-.. automodule:: mbb_funcs
+.. automodule:: mbb.mbb_funcs
     :members:

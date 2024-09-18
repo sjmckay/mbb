@@ -8,12 +8,12 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../mbb/'))
+sys.path.insert(0, os.path.abspath('..'))
 
 project = 'mbb'
 copyright = '2024, Stephen McKay'
 author = 'Stephen McKay'
-release = '0.0.5'
+release = '0.0.6'
 root_doc = "index"
 
 # -- General configuration ---------------------------------------------------

@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=6424ca4d"></script>
+    <script src="_static/documentation_options.js?v=73504a2b"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -363,10 +363,10 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb_funcs.mbb_fun_go"><code class="docutils literal notranslate"><span class="pre">mbb_fun_go()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb_funcs.mbb_fun_go_pl"><code class="docutils literal notranslate"><span class="pre">mbb_fun_go_pl()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb_funcs.mbb_fun_ot"><code class="docutils literal notranslate"><span class="pre">mbb_fun_ot()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb_funcs.mbb_fun_ot_pl"><code class="docutils literal notranslate"><span class="pre">mbb_fun_ot_pl()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb.mbb_funcs.mbb_fun_go"><code class="docutils literal notranslate"><span class="pre">mbb_fun_go()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb.mbb_funcs.mbb_fun_go_pl"><code class="docutils literal notranslate"><span class="pre">mbb_fun_go_pl()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb.mbb_funcs.mbb_fun_ot"><code class="docutils literal notranslate"><span class="pre">mbb_fun_ot()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb.mbb_funcs.mbb_fun_ot_pl"><code class="docutils literal notranslate"><span class="pre">mbb_fun_ot_pl()</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -384,9 +384,9 @@ document.write(`
 All of these follow the form of the <a class="reference external" href="https://doi.org/10.1111/j.1365-2966.2012.21455.x">Casey et al. (2012)</a> models,
 with optional mid-infrared powerlaw (slope fixed to <code class="docutils literal notranslate"><span class="pre">alpha=2.0</span></code>) and the choice between assuming optically thin dust or the general opacity model (turnover wavelength <code class="docutils literal notranslate"><span class="pre">lambda_0</span> <span class="pre">=</span> <span class="pre">200</span> <span class="pre">microns</span></code>).</p>
 <p>To choose a given model, use the <code class="docutils literal notranslate"><span class="pre">pl</span></code> (powerlaw) and/or <code class="docutils literal notranslate"><span class="pre">opthin</span></code> (optically thin) flags when intializing a ModifiedBlackbody instance.</p>
-<dl class="py function" id="module-mbb_funcs">
-<dt class="sig sig-object py" id="mbb_funcs.mbb_fun_go">
-<span class="sig-prename descclassname"><span class="pre">mbb_funcs.</span></span><span class="sig-name descname"><span class="pre">mbb_fun_go</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb_funcs.mbb_fun_go" title="Link to this definition">#</a></dt>
+<dl class="py function" id="module-mbb.mbb_funcs">
+<dt class="sig sig-object py" id="mbb.mbb_funcs.mbb_fun_go">
+<span class="sig-prename descclassname"><span class="pre">mbb.mbb_funcs.</span></span><span class="sig-name descname"><span class="pre">mbb_fun_go</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.mbb_funcs.mbb_fun_go" title="Link to this definition">#</a></dt>
 <dd><p>MBB function with no powerlaw and general opacity assumptions</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -406,8 +406,8 @@ with optional mid-infrared powerlaw (slope fixed to <code class="docutils litera
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="mbb_funcs.mbb_fun_go_pl">
-<span class="sig-prename descclassname"><span class="pre">mbb_funcs.</span></span><span class="sig-name descname"><span class="pre">mbb_fun_go_pl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb_funcs.mbb_fun_go_pl" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="mbb.mbb_funcs.mbb_fun_go_pl">
+<span class="sig-prename descclassname"><span class="pre">mbb.mbb_funcs.</span></span><span class="sig-name descname"><span class="pre">mbb_fun_go_pl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.mbb_funcs.mbb_fun_go_pl" title="Link to this definition">#</a></dt>
 <dd><p>MBB function with powerlaw and general opacity assumption</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -427,8 +427,8 @@ with optional mid-infrared powerlaw (slope fixed to <code class="docutils litera
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="mbb_funcs.mbb_fun_ot">
-<span class="sig-prename descclassname"><span class="pre">mbb_funcs.</span></span><span class="sig-name descname"><span class="pre">mbb_fun_ot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb_funcs.mbb_fun_ot" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="mbb.mbb_funcs.mbb_fun_ot">
+<span class="sig-prename descclassname"><span class="pre">mbb.mbb_funcs.</span></span><span class="sig-name descname"><span class="pre">mbb_fun_ot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.mbb_funcs.mbb_fun_ot" title="Link to this definition">#</a></dt>
 <dd><p>MBB function with no powerlaw and optically thin assumption</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -448,8 +448,8 @@ with optional mid-infrared powerlaw (slope fixed to <code class="docutils litera
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="mbb_funcs.mbb_fun_ot_pl">
-<span class="sig-prename descclassname"><span class="pre">mbb_funcs.</span></span><span class="sig-name descname"><span class="pre">mbb_fun_ot_pl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb_funcs.mbb_fun_ot_pl" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="mbb.mbb_funcs.mbb_fun_ot_pl">
+<span class="sig-prename descclassname"><span class="pre">mbb.mbb_funcs.</span></span><span class="sig-name descname"><span class="pre">mbb_fun_ot_pl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mbb.mbb_funcs.mbb_fun_ot_pl" title="Link to this definition">#</a></dt>
 <dd><p>MBB function with powerlaw and optically thin assumption</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -506,10 +506,10 @@ with optional mid-infrared powerlaw (slope fixed to <code class="docutils litera
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb_funcs.mbb_fun_go"><code class="docutils literal notranslate"><span class="pre">mbb_fun_go()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb_funcs.mbb_fun_go_pl"><code class="docutils literal notranslate"><span class="pre">mbb_fun_go_pl()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb_funcs.mbb_fun_ot"><code class="docutils literal notranslate"><span class="pre">mbb_fun_ot()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb_funcs.mbb_fun_ot_pl"><code class="docutils literal notranslate"><span class="pre">mbb_fun_ot_pl()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb.mbb_funcs.mbb_fun_go"><code class="docutils literal notranslate"><span class="pre">mbb_fun_go()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb.mbb_funcs.mbb_fun_go_pl"><code class="docutils literal notranslate"><span class="pre">mbb_fun_go_pl()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb.mbb_funcs.mbb_fun_ot"><code class="docutils literal notranslate"><span class="pre">mbb_fun_ot()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mbb.mbb_funcs.mbb_fun_ot_pl"><code class="docutils literal notranslate"><span class="pre">mbb_fun_ot_pl()</span></code></a></li>
 </ul>
   </nav></div>
 

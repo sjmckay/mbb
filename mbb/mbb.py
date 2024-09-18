@@ -38,7 +38,7 @@ LHI = 1000
 
 
 
-from mbb_funcs import mbb_fun_ot, mbb_fun_go, mbb_fun_go_pl, mbb_fun_ot_pl, planckbb
+from .mbb_funcs import mbb_fun_ot, mbb_fun_go, mbb_fun_go_pl, mbb_fun_ot_pl, planckbb
 
 class ModifiedBlackbody:
     """Class to represent a modified blackbody (or MBB).
