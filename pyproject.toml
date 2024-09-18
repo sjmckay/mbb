@@ -3,8 +3,8 @@ requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mbb_model"
-version = "0.0.2"
+name = "mbb"
+version = "0.0.3"
 
 dependencies = [
 "matplotlib",

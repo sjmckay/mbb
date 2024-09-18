@@ -10,10 +10,10 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../mbb_model/'))
 
-project = 'mbb_model'
+project = 'mbb'
 copyright = '2024, Stephen McKay'
 author = 'Stephen McKay'
-release = '0.0.1'
+release = '0.0.3'
 root_doc = "index"
 
 # -- General configuration ---------------------------------------------------
@@ -31,7 +31,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
-html_title = "mbb_model"
+html_title = "mbb"
 autoclass_content = 'both'
 html_theme_options = {
     "repository_url": "https://github.com/mckay-sjm/mbb_model",
