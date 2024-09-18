@@ -8,7 +8,7 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../mbb_model/'))
+sys.path.insert(0, os.path.abspath('../mbb/'))
 
 project = 'mbb'
 copyright = '2024, Stephen McKay'
