@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mbb"
-version = "0.0.3"
+version = "0.0.4"
 
 dependencies = [
 "matplotlib",
@@ -12,7 +12,5 @@ dependencies = [
 "numpy",
 "scipy",
 "emcee",
-"re",
-"multiprocessing",
 "corner"
 ]
