@@ -62,13 +62,13 @@ class ModifiedBlackbody:
         self.pl = pl
         self.opthin=opthin
         self.model = self._select_model()
-
         self.N = 11
         Lcurr = np.log10(self.get_luminosity((8,1000)).value)
         while((Lcurr > (L+0.0001)) | (Lcurr < (L-0.0001))):
             self.N = self.N + 0.1*(L-Lcurr)
             Lcurr = np.log10(self.get_luminosity((8,1000)).value)
         self.L = np.round(Lcurr,2)
+        self.dust_mass = self._compute_dust_mass()
 
     def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7):
         """Fit photometry
@@ -110,6 +110,7 @@ class ModifiedBlackbody:
                 self.N = self.N * (L/Lcurr)
                 Lcurr = np.log10(self.get_luminosity((8,1000)).value)
             self.L = np.round(Lcurr,2)
+        self.dust_mass = self._compute_dust_mass()
 
     def update(self, N=None, T=None, beta=None):
         """ update modified blackbody parameters (not redshift or model), given new temperature,  emissivity, 
@@ -118,6 +119,7 @@ class ModifiedBlackbody:
         if T: self.T = T 
         if beta: self.beta = beta
         self.L = np.log10(self.get_luminosity((8,1000)).value)
+        self.dust_mass = self._compute_dust_mass()
 
     def save_state(self, filepath):
         """Save modified blackbody state
@@ -289,6 +291,17 @@ class ModifiedBlackbody:
             lum = np.sum(4*np.pi*DL**2 * self._eval_mbb(lam[:-1],N,T,beta) * dnu)/(1+z)
             return lum.to(u.Lsun)
     
+    def _compute_dust_mass(self):
+        '''
+        Compute dust mass for this ModifiedBlackbody.
+        '''
+        l0= 200.
+        DL = cosmo.luminosity_distance(self.z)
+        kappa_B_T = self._eval_mbb(l0, N=0, T=self.T, beta=self.beta, z=0)
+        Snu = self.eval(l0,z=0)
+        dustmass = Snu * DL**2 / kappa_B_T / (1.+self.z)
+        return dustmass
+
     def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCPU):
         """
         Function to handle the actual MCMC fitting routine of this ModifiedBlackbody's internal model.
