@@ -295,12 +295,12 @@ class ModifiedBlackbody:
         '''
         Compute dust mass for this ModifiedBlackbody.
         '''
-        l0= 200.
+        l0= 850.
         DL = cosmo.luminosity_distance(self.z)
-        kappa_B_T = self._eval_mbb(l0, N=0, T=self.T, beta=self.beta, z=0)
+        kappa_B_T = 0.15*u.m**2/u.kg * planckbb(l0, T=self.T)
         Snu = self.eval(l0,z=0)
         dustmass = Snu * DL**2 / kappa_B_T / (1.+self.z)
-        return dustmass
+        return dustmass.to(u.Msun)
 
     def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCPU):
         """
