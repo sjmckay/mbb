@@ -298,7 +298,7 @@ class ModifiedBlackbody:
         l0= 850.
         DL = cosmo.luminosity_distance(self.z)
         kappa_B_T = 0.15*u.m**2/u.kg * planckbb(l0, T=self.T)
-        Snu = self.eval(l0,z=0)
+        Snu = self.eval(l0,z=0).value
         dustmass = Snu * DL**2 / kappa_B_T / (1.+self.z)
         return dustmass.to(u.Msun)
 
