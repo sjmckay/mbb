@@ -1,6 +1,6 @@
-Metadata-Version: 2.2
+Metadata-Version: 2.4
 Name: mbb
-Version: 0.0.7
+Version: 0.1.0
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: matplotlib
@@ -9,6 +9,7 @@ Requires-Dist: numpy
 Requires-Dist: scipy
 Requires-Dist: emcee
 Requires-Dist: corner
+Dynamic: license-file
 
 # mbb
 

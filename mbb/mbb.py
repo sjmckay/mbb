@@ -19,6 +19,8 @@ from astropy.constants import c, k_B, h
 from astropy.cosmology import FlatLambdaCDM
 cosmo = FlatLambdaCDM(H0=70.0, Om0=0.30) 
 
+from functools import partial
+
 from multiprocessing import Pool
 from multiprocessing import cpu_count
 
@@ -38,7 +40,7 @@ LHI = 1000
 
 
 
-from .mbb_funcs import mbb_fun_ot, mbb_fun_go, mbb_fun_go_pl, mbb_fun_ot_pl, planckbb
+from .mbb_funcs import mbb_func, planckbb #mbb_fun_ot, mbb_fun_go, mbb_fun_go_pl, mbb_fun_ot_pl
 
 class ModifiedBlackbody:
     """Class to represent a modified blackbody (or MBB).
@@ -70,11 +72,11 @@ class ModifiedBlackbody:
         self.L = np.round(Lcurr,2)
         self.dust_mass = self._compute_dust_mass()
 
-    def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7):
+    def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,to_vary=['N','beta','T','z'],restframe=False):
         """Fit photometry
 
         Fit a modified blackbody to photometry.
-        Updates the parameters of this MBB model to the best-fit parameters of the fit, and populates the "result"
+        Updates the parameters of this MBB model to the best-fit parameters of the fit, and populates the "_result"
         attribute of the ModifiedBlackbody with the fit results.
 
         Args:
@@ -83,27 +85,36 @@ class ModifiedBlackbody:
             nwalkers (int): how many walkers should be used in the MCMC fit. 
             niter (int): how many iterations to run in the fit.
             stepsize (float): stepsize used to randomize the initial walker values. 
+            to_vary (list): list of parameter names, e.g., ['N','beta','T','z','alpha','l0'] to vary in the fit. The rest will be fixed.
+            restframe (bool): whether wavelengths in `phot` are given in rest frame (default is observed frame)
         """
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
-        self.phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
-        init = [self.N,self.T,self.beta]
-
-        if len(phot[0]) < 3:
-            init = init[0:2]
-        if len(phot[0]) < 2:
-            init = init[0:1]
+        if restframe: self.phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
+        else: self.phot = (phot[0]/(1.0+self.z),phot[1],phot[2])
+        initdict = self._fit_param_dict()
+        try:
+            init = [initdict[key] for key in to_vary]
+        except KeyError:
+            raise ValueError(f'Varied parameters must be one of {list(initdict.keys())}')
         ndim=len(init)
+        fixed = initdict.copy()
+        for key in to_vary: fixed.pop(key)
+        self._to_vary = to_vary
         p0 = [np.array(init) + stepsize * np.random.randn(ndim) for i in range(nwalkers)]
         result = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, lnprob=self._lnprob, 
-            ndim=ndim)#, data = self.phot)
-        self.result = result
-        medtheta = self._get_theta_spread()
-        self.update(*medtheta[1])
+            ndim=ndim, to_vary = to_vary, fixed = fixed)#, data = self.phot)
+        self._result = result
+        medtheta = self._get_theta_spread() #get 16,50,84 percentiles of fitted parameters
+        updated = initdict
+        for i, key in enumerate(to_vary):
+            updated[key] = medtheta[1][i]
+        self.update(**updated)
 
-    def update_L(self, L=None, T=None, beta=None):
+    def update_L(self, L=None, T=None, beta=None,z=None):
         """ update modified blackbody parameters (not redshift or model), given new luminosity, temperature, and emissivity. """
         if T: self.T = T 
         if beta: self.beta = beta
+        if z: self.z = z
         if L: 
             Lcurr = np.log10(self.get_luminosity((8,1000)).value)
             while((Lcurr > (L+0.001)) | (Lcurr < (L-0.001))):
@@ -112,11 +123,12 @@ class ModifiedBlackbody:
             self.L = np.round(Lcurr,2)
         self.dust_mass = self._compute_dust_mass()
 
-    def update(self, N=None, T=None, beta=None):
+    def update(self, N=None, T=None, beta=None,z=None):
         """ update modified blackbody parameters (not redshift or model), given new temperature,  emissivity, 
         and N value (related to luminosity---see Casey+ 2012). """
         if N: self.N = N
         if T: self.T = T 
+        if z: self.z = z
         if beta: self.beta = beta
         self.L = np.log10(self.get_luminosity((8,1000)).value)
         self.dust_mass = self._compute_dust_mass()
@@ -179,11 +191,10 @@ class ModifiedBlackbody:
             obs_frame (bool): whether to plot against observed-frame wavelengths (default is rest frame).s
             ax (matplotlib.pyplot.Axes): axes to plot the model on. 
         """
-
         if ax is None: fig, ax = plt.subplots(figsize=(5,4),dpi=120) 
         else: fig = ax.get_figure()
         x = np.logspace(1,4,500)
-        if hasattr(self, 'result'):
+        if hasattr(self, '_result'):
             nsamples = 200
             y, lb,ub = self._get_model_spread(x)
         else: y = self.eval(x)
@@ -193,7 +204,7 @@ class ModifiedBlackbody:
         else:
             ax.set(xlabel = r'$\lambda$ rest-frame [$\mu$m]', ylabel = 'Flux [mJy]')
         ax.plot(x,y*1000, ls='-',linewidth=0.7,color='k')
-        if hasattr(self, 'result'): 
+        if hasattr(self, '_result'): 
             ax.fill_between(x,lb*1000,ub*1000,color='steelblue',alpha=0.3)
 
         if hasattr(self,'phot'):
@@ -219,22 +230,28 @@ class ModifiedBlackbody:
         ax.annotate(r'$T$ '+f'= {np.round(self.T,1)} K', xy=(0.02, 0.79), xycoords = 'axes fraction')
         return fig, ax
     
-    def plot_corner(self):
-        """ Plot a corner plot showing the results for beta, T, and L from the MCMC fit to the data.
+    def plot_corner(self,**kwargs):
+        """ Plot a corner plot showing the results from the MCMC fit to the data.
         """
-        data = self.result['sampler'].flatchain[::10,:]
+        data = self._result['sampler'].flatchain[::10,:]
         n = len(data)
-        lirs=[]
-        for i in range(len(data)):
-            lirs.append(np.log10(self._integrate_mbb(*data[i],z=self.z,
-                                 wllimits=(8,1000)).value))
-        lirs = np.asarray(lirs).reshape(len(lirs),1)
-        data = np.concatenate((data[:,1:], lirs),axis=1)
+        params = self._fit_param_dict()
+        labels = {'T':r'$T$','beta':r'$\beta$','N':r'$L_{\rm IR}$','z':r'$z$','alpha':r'$\alpha$','l0':r'$\lambda_0$'}
+        if 'N' in self._to_vary:
+            lirs=[]
+            for i in range(len(data)):
+                p = params.copy()
+                for j, key in enumerate(self._to_vary): p[key] = data[i][j]
+                lirs.append(np.log10(self._integrate_mbb(**p,wllimits=(8,1000)).value))
+            lirs = np.asarray(lirs).reshape(len(lirs),1)
+            whereN = np.where(np.array(self._to_vary) == 'N')[0]
+            data[:,whereN] = lirs
         fig = corner.corner(
         data, 
-        labels=[r'$T$',r'$\beta$',r'$L_{\rm IR}$',], 
+        labels=[labels[key] for key in self._to_vary], 
         quantiles=(0.16,0.5,0.84),
-        show_titles=True
+        show_titles=True,
+        **kwargs
         )
         return fig
 
@@ -252,12 +269,11 @@ class ModifiedBlackbody:
         Returns:
             float: value of mbb at the wavelength ``wl``
         """
-        return self._eval_mbb(wl, self.N,self.T,self.beta,z)
+        return self._eval_mbb(wl, **self._fit_param_dict())
 
-    def _eval_mbb(self, wl, N, T, beta, z=0):
-        """Return evaluation of this MBB's function but with variable N, b, or T. See docs for eval()"""
-        p = [N,T,beta]
-        return self.model(p, wl/(1+z), z=z)*u.Jy
+    def _eval_mbb(self, wl, N, T, beta, z=0,alpha=2,l0=200):
+        """Return evaluation of this MBB's function but with variable parameters. See docs for eval()"""
+        return self.model(wl/(1+z),N=N,beta=beta,T=T, z=z,alpha=alpha,l0=l0)*u.Jy
 
     def get_luminosity(self, wllimits=(8,1000), cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
         """get integrated LIR luminosity for the current MBB state between wavelength limits
@@ -271,9 +287,9 @@ class ModifiedBlackbody:
             float: the luminosity integrated between rest-frame wavelength limits given by ``wllimits``
          """
 
-        return self._integrate_mbb(self.N,self.T,self.beta,self.z,wllimits,cosmo)
+        return self._integrate_mbb(**self._fit_param_dict(), wllimits=wllimits,cosmo=cosmo)
 
-    def _integrate_mbb(self,N,T,beta,z=0,wllimits=(8,1000), 
+    def _integrate_mbb(self,N,T,beta,z=0,alpha=2,l0=200,wllimits=(8,1000), 
                        cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
         """
         integrate a model with given N, beta, T between wllimits in rest-frame. See docs for get_luminosity,
@@ -288,7 +304,7 @@ class ModifiedBlackbody:
             dnu = nu[1:] - nu[0:-1]
             DL = cosmo.luminosity_distance(z)
             lam = nu.to(u.um, equivalencies=u.spectral()).value  
-            lum = np.sum(4*np.pi*DL**2 * self._eval_mbb(lam[:-1],N,T,beta) * dnu)/(1+z)
+            lum = np.sum(4*np.pi*DL**2 * self._eval_mbb(lam[:-1],N,T,beta, alpha=alpha,l0=l0) * dnu)/(1+z)
             return lum.to(u.Lsun)
     
     def _compute_dust_mass(self):
@@ -302,7 +318,7 @@ class ModifiedBlackbody:
         dustmass = Snu * DL**2 / kappa_B_T / (1.+self.z)
         return dustmass.to(u.Msun)
 
-    def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCPU):
+    def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCPU,to_vary=['N','beta','T','z'], fixed=None):
         """
         Function to handle the actual MCMC fitting routine of this ModifiedBlackbody's internal model.
 
@@ -320,7 +336,7 @@ class ModifiedBlackbody:
             ``pos``, ``prob``, and ``state`` are the output of the ``run_mcmc`` function from the ``emcee.EnsembleSampler <https://emcee.readthedocs.io/en/stable/user/sampler/>``_
         """
         with Pool(ncores) as pool:
-            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool)
+            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool, parameter_names=to_vary, kwargs=fixed)
             print("Running burn-in...")
             p0, _, _ = sampler.run_mcmc(p0, NBURN,progress=True)
             sampler.reset()
@@ -328,6 +344,13 @@ class ModifiedBlackbody:
             pos, prob, state = sampler.run_mcmc(p0, niter,progress=True)
             print("Done\n")
         return {'sampler':sampler, 'pos':pos, 'prob':prob, 'state':state}  
+    
+
+    def _fit_param_dict(self):
+        """
+        Convenience function to return this ModifiedBlackbody's fitting parameters (so N instead of L) as a dictionary
+        """
+        return {'N':self.N,'T':self.T,'beta':self.beta,'z':self.z}
     
     def _get_model_spread(self, lam, nsamples=200):
         """
@@ -341,65 +364,64 @@ class ModifiedBlackbody:
             tuple of arrays (float, float, float): the median, 16th, and 84th percentile of the spectrum.
         """
         models = []
-        flattened_chain = self.result['sampler'].flatchain
+        flattened_chain = self._result['sampler'].flatchain
         draw = np.floor(np.random.uniform(0,len(flattened_chain),
             size=nsamples)).astype(int)
         thetas = flattened_chain[draw]
-        for i in thetas:
-            mod = self.model(i,lam,z=self.z)
+        p = self._fit_param_dict()
+        for t in thetas:
+            for i,key in enumerate(self._to_vary): # which parameters did we vary
+                p[key] = t[i] # replace that parameter with fitted parameter
+            mod = self.model(lam,**p)
             models.append(mod)
-        spread = np.std(models, axis=0)
-        lb,med_model,ub = np.percentile(models,[16,50,84],axis=0)
+        spread = np.nanstd(models, axis=0)
+        lb,med_model,ub = np.nanpercentile(models,[16,50,84],axis=0)
         return med_model, lb, ub
 
     def _get_theta_spread(self):
         """
         Function to get the median, 16th, and 84th percentile of the fit parameters (called theta in emcee)
         """
-        thetas = self.result['sampler'].flatchain
-        theta_res = np.percentile(thetas,[16,50,84],axis=0)
+        thetas = self._result['sampler'].flatchain
+        theta_res = np.nanpercentile(thetas,[16,50,84],axis=0)
         return theta_res
 
     def _select_model(self):
         """
         choose which of the modifed blackbody models (include MIR power law? optically thin?) is appropriate 
-        based on the ModifiedBlackbody initialization arguments pl = True/False and opthin = True / False.
+        based on the ModifiedBlackbody initialization arguments pl = True/False and opthin = True/False.
+        Previously this function returned entirely different functions, now it does this effectively using functools.partial.
         """
-        if self.opthin:
-            if self.pl: return mbb_fun_ot_pl
-            else: return mbb_fun_ot
-        else:
-            if self.pl: return mbb_fun_go_pl
-            else: return mbb_fun_go
+        return partial(mbb_func, opthin=self.opthin, pl=self.pl)
 
-    def _lnlike(self, theta):
+    def _lnlike(self, theta, **kwargs):
         x = self.phot[0]
         y = self.phot[1]
         yerr = self.phot[2]
-        ymodel = self.model(theta, x, z=self.z)
+        ymodel = self.model(x, **theta, **kwargs)
         wres = np.sum(((y-ymodel)/yerr)**2)
         lnlike = -0.5*wres
         if np.isnan(lnlike):
             return -np.inf
         return lnlike
         
-    def _lnprior(self,theta):
-        if len(theta) > 1:
-            T = theta[1]
-            if T > 10 and T < 100:
-                if len(theta) > 2: 
-                    beta = theta[2] 
-                    if beta > 5.0 or beta < 0.1:
-                        return -np.inf
-                return 0.0
-            else: return -np.inf 
+    def _lnprior(self, theta):
+        if 'T' in theta.keys():
+            T = theta['T']
+            if T < 5 or T > 120: return -np.inf
+        if 'beta' in theta.keys(): 
+            beta = theta['beta']
+            if beta > 5.0 or beta < 0.1: return -np.inf
+        if 'z' in theta.keys(): 
+            z = theta['z']
+            if z > 12.0 or z < 0.1: return -np.inf
         return 0.0
 
-    def _lnprob(self, theta):
+    def _lnprob(self, theta, **kwargs):
         lp = self._lnprior(theta)
         if not np.isfinite(lp):
             return -np.inf
-        return lp + self._lnlike(theta)
+        return lp + self._lnlike(theta, **kwargs)
 
 
 

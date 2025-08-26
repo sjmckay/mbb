@@ -11,22 +11,21 @@ k_B = k_B.value
 h = h.value
 
 
-DEF_BETA = 1.8 #default beta
-DEF_ALPHA = 2.0 #default alpha
-DEF_T = 32
+# DEF_BETA = 1.8 #default beta
+# DEF_ALPHA = 2.0 #default alpha
+# DEF_T = 50
 Tcmb0 = 2.75
-l0=200
 
 # note in all cases, lambda (l) is in microns and rest frame. These functions return model values in Janskys 
 
-def ot_mbb(Nbb, beta, T, l, z):
+def ot_mbb(l, Nbb, beta, T, z,l0=200):
     Tcmbz = Tcmb0*(1+z)
     Tz = (T**(4+beta)  +  (Tcmb0)**(4+beta) * ((1+z)**(4+beta)-1) ) **(1/(4+beta))
     result = (1 - (planckbb(l,Tcmbz)/planckbb(l,Tz))) * (Tz/T)**(4+beta) \
             * 10.0**Nbb *(l0*1e-6/c)**beta * 2*h / c**2 * (c/(l*1.e-6))**(beta+3)/(np.exp(h*c/(l*1e-6*k_B*T))-1)
     return result
 
-def go_mbb(Nbb, beta, T, l, z):
+def go_mbb(l, Nbb, beta, T, z,l0=200):
     Tcmbz = Tcmb0*(1+z)
     Tz = (T**(4+beta)  +  (Tcmb0)**(4+beta) * ((1+z)**(4+beta)-1) ) **(1/(4+beta))
     ### general opacity version
@@ -34,14 +33,14 @@ def go_mbb(Nbb, beta, T, l, z):
                 * 10.0**Nbb * 2*h / c**2 * ((1.0 - np.exp(-(l0/l)**beta))*(c/(l*1.e-6))**3.0)/(np.exp(h*c/(l*1.e-6*k_B*T))-1.0)
     return result
 
-def ot_pl(Nbb, beta, T, alpha, l,z):
+def ot_pl(l, Nbb, beta, T, alpha,l0=200):
     l_c = 0.75*(T*(alpha*7.243e-5 + 1.905e-4))**(-1)
     Npl = 10.0**Nbb *(l0*1e-6/c)**beta * 2*h / c**2 * (c/(l_c*1e-6))**(beta+3)\
             /(np.exp(h*c/(l_c*1e-6*k_B*T))-1.0)/((l_c*1e-6)**alpha)
     result = Npl*(l*1e-6)**alpha * np.exp(-(l/l_c)**2)
     return result
 
-def go_pl(Nbb, beta, T, alpha, l,z):
+def go_pl(l, Nbb, beta, T, alpha, l0=200):
     l_c = 0.75*(T*(alpha*7.243e-5 + 1.905e-4)+ (alpha*6.246 + 26.68)**(-2))**(-1)
     Npl = 10.0**Nbb * 2*h / c**2 * ((1.0 - np.exp(-(l0/l_c)**beta)) * (c/(l_c*1e-6))**3)\
             /(np.exp(h*c/(l_c*1e-6*k_B*T))-1.0)/((l_c*1e-6)**alpha)
@@ -49,95 +48,46 @@ def go_pl(Nbb, beta, T, alpha, l,z):
     return result
 
 
-def mbb_fun_ot_pl(theta,l,z=0):
-    """ MBB function with powerlaw and optically thin assumption
-
-    Args:
-        theta (list): the parameters to vary in the fitting (usually N, T and beta)
-        l (float): the rest-frame wavelengths at which to evaluate the model.
-        z (float): the redshift of the model
-
-    Returns:
-        float: the value(s) of the model at wavelengths ``l``
-    """
-    Nbb = theta[0] # norm constant for greybody (gb)
-    if len(theta) > 1:
-        T = theta[1] # temperature of gb in K
-    else:
-        T = DEF_T
-    if len(theta) > 2: 
-        beta = theta[2] # emissivity index (set to p[2] if enough data points in FIR)
-    else:
-        beta = DEF_BETA
-    alpha = DEF_ALPHA # powerlaw slope
-    return ot_mbb(Nbb,beta,T,l,z) + ot_pl(Nbb,beta,T,alpha,l,z) 
     
-def mbb_fun_go_pl(theta,l,z=0):
+def mbb_fun_ot(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200):
     """ MBB function with powerlaw and general opacity assumption
 
     Args:
-        theta (list): the parameters to vary in the fitting (usually N, T and beta)
         l (float): the rest-frame wavelengths at which to evaluate the model.
+        N (float): log10 normalization factor of blackbody
+        beta (float): emissivity index
+        T (float): effective dust temperature
         z (float): the redshift of the model
-
+        alpha (float): power-law slope
+        l0 (float): turnover wavelength at which dust is optically thin
     Returns:
         float: the value(s) of the model at wavelengths ``l``
     """
-    Nbb = theta[0] # norm constant for greybody (gb)
-    if len(theta) > 1:
-        T = theta[1] # temperature of gb in K
-    else:
-        T = DEF_T
-    if len(theta) > 2: 
-        beta = theta[2] # emissivity index (set to p[2] if enough data points in FIR)
-    else:
-        beta = DEF_BETA
-    alpha = DEF_ALPHA # powerlaw slope
-    return go_mbb(Nbb,beta,T,l,z) + go_pl(Nbb,beta,T,alpha,l,z) 
+    return ot_mbb(l, N,beta,T,z)
 
-def mbb_fun_ot(theta,l,z=0):
-    """ MBB function with no powerlaw and optically thin assumption
+
+def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False):
+    """ MBB function with optional powerlaw and variable opacity assumptions
 
     Args:
-        theta (list): the parameters to vary in the fitting (usually N, T and beta)
         l (float): the rest-frame wavelengths at which to evaluate the model.
+        N (float): log10 normalization factor of blackbody
+        beta (float): emissivity index
+        T (float): effective dust temperature
         z (float): the redshift of the model
-
+        alpha (float): power-law slope
+        l0 (float): turnover wavelength at which dust is optically thin
+        opthin (bool): Whether or not the model should assume optically thin dust emission.
+        pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
     Returns:
         float: the value(s) of the model at wavelengths ``l``
     """
-    Nbb = theta[0] # norm constant for greybody (gb)
-    if len(theta) > 1:
-        T = theta[1] # temperature of gb in K
+    if pl:
+        if opthin: return ot_mbb(l, N,beta,T,z,l0=l0) + ot_pl(l,N,beta,T,alpha,l0=l0) 
+        else: return go_mbb(l, N,beta,T,z,l0=l0) + go_pl(l,N,beta,T,alpha,l0=l0) 
     else:
-        T = DEF_T    
-    if len(theta) > 2: 
-        beta = theta[2] # emissivity index (set to p[2] if enough data points in FIR)
-    else:
-        beta = DEF_BETA
-    return ot_mbb(Nbb,beta,T,l,z)
-
-def mbb_fun_go(theta,l,z=0):
-    """ MBB function with no powerlaw and general opacity assumptions
-
-    Args:
-        theta (list): the parameters to vary in the fitting (usually N, T and beta)
-        l (float): the rest-frame wavelengths at which to evaluate the model.
-        z (float): the redshift of the model
-
-    Returns:
-        float: the value(s) of the model at wavelengths ``l``
-    """
-    Nbb = theta[0] # norm constant for greybody (gb)
-    if len(theta) > 1:
-        T = theta[1] # temperature of gb in K
-    else:
-        T = DEF_T
-    if len(theta) > 2: 
-        beta = theta[2] # emissivity index (set to p[2] if enough data points in FIR)
-    else:
-        beta = DEF_BETA
-    return go_mbb(Nbb,beta,T,l,z)
+        if opthin: return ot_mbb(l, N,beta,T,z,l0=l0) 
+        else: return go_mbb(l, N,beta,T,z,l0=l0) 
 
 
 def planckbb(l,T): # note although this requires wavlength in micron, it represents B_nu
