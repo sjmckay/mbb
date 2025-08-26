@@ -48,24 +48,6 @@ def go_pl(l, Nbb, beta, T, alpha, l0=200):
     return result
 
 
-    
-def mbb_fun_ot(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200):
-    """ MBB function with powerlaw and general opacity assumption
-
-    Args:
-        l (float): the rest-frame wavelengths at which to evaluate the model.
-        N (float): log10 normalization factor of blackbody
-        beta (float): emissivity index
-        T (float): effective dust temperature
-        z (float): the redshift of the model
-        alpha (float): power-law slope
-        l0 (float): turnover wavelength at which dust is optically thin
-    Returns:
-        float: the value(s) of the model at wavelengths ``l``
-    """
-    return ot_mbb(l, N,beta,T,z)
-
-
 def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False):
     """ MBB function with optional powerlaw and variable opacity assumptions
 
