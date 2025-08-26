@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: mbb
-Version: 0.1.0
+Version: 0.2.0
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: matplotlib
@@ -24,5 +24,8 @@ Author: Stephen McKay, 2023
 
 The simplest way to install `mbb` is with `pip`; e.g., `pip install mbb`.
 
-## Examples
-Coming soon!
+## Examples and Documentation
+
+Basic documentation [here.](https://mbb-model.readthedocs.io/en/latest/)
+
+More examples coming soon!

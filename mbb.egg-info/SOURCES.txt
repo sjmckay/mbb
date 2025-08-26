@@ -9,3 +9,4 @@ mbb.egg-info/SOURCES.txt
 mbb.egg-info/dependency_links.txt
 mbb.egg-info/requires.txt
 mbb.egg-info/top_level.txt
+tests/testmbb.py
