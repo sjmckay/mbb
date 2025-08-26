@@ -11,5 +11,8 @@ Author: Stephen McKay, 2023
 
 The simplest way to install `mbb` is with `pip`; e.g., `pip install mbb`.
 
-## Examples
-Coming soon!
+## Examples and Documentation
+
+Basic documentation [here.](https://mbb-model.readthedocs.io/en/latest/)
+
+More examples coming soon!
