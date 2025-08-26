@@ -220,20 +220,24 @@ class ModifiedBlackbody:
         )
         return fig
 
-    def eval(self, wl,z=0):
+    def eval(self, wl,z=None):
         """Evaluate MBB at wavelength
         
         Return evaluation of this MBB's function if observed at the given wavelengths wl
-        shifted to redshift z, in Jy. Leave z=0 to get rest-frame evaluation.
+        shifted to redshift z, in Jy. Set z=0 to get rest-frame evaluation. Default is to 
+        give observed-frame flux.
 
         Args:
             wl (float): wavelength(s) in micron
-            z (float): redshift to which the model should be shifted.
+            z (float): redshift at which the model should be evaluated.
 
         Returns:
             float: value of mbb at the wavelength ``wl``
         """
-        return self._eval_mbb(wl, **self._fit_param_dict())
+        params = self._fit_param_dict()
+        if z!=None:
+            params['z']=z
+        return self._eval_mbb(wl, **params)
 
     def _eval_mbb(self, wl, N, T, beta, z=0,alpha=2,l0=200):
         """Return evaluation of this MBB's function but with variable parameters. See docs for eval()"""
