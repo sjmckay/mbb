@@ -276,13 +276,15 @@ class ModifiedBlackbody:
             lum = np.sum(4*np.pi*DL**2 * self._eval_mbb(lam[:-1],N,T,beta, alpha=alpha,l0=l0) * dnu)/(1+z)
             return lum.to(u.Lsun)
     
-    def _compute_dust_mass(self):
+    def _compute_dust_mass(self,):
         '''
         Compute dust mass for this ModifiedBlackbody.
         '''
         l0= 850.
         DL = cosmo.luminosity_distance(self.z)
-        kappa_B_T = 0.15*u.m**2/u.kg * planckbb(l0, T=self.T)
+        kappa_B_T = 0.15*u.m**2/u.kg * 1e26 * planckbb(l0, T=self.T) #kappa coeff: 
+                                                                        # 0.0469 taken from Traina+2024/Draine+14 at 850um
+                                                                        # 0.15 from Casey+12 at 850um
         Snu = self.eval(l0,z=0).value
         dustmass = Snu * DL**2 / kappa_B_T / (1.+self.z)
         return dustmass.to(u.Msun)
