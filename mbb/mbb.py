@@ -258,6 +258,15 @@ class ModifiedBlackbody:
 
         return self._integrate_mbb(**self._fit_param_dict(), wllimits=wllimits,cosmo=cosmo)
 
+    def get_peak_wavelength(self):
+        '''Get the peak (rest-frame) wavelength of this ModifiedBlackbody, in microns.'''
+        x = np.logspace(1,3,5000)
+        y = self.eval(x,z=0)
+        peak = np.nanargmax(y)
+        peak_wl = x[peak] * u.micron
+        return peak_wl
+
+
     def _integrate_mbb(self,N,T,beta,z=0,alpha=2,l0=200,wllimits=(8,1000), 
                        cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
         """
