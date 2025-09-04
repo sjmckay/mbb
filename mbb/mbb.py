@@ -118,7 +118,7 @@ class ModifiedBlackbody:
     def n_bands(self):
         return self._n_bands
 
-    def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,to_vary=['L','beta','T','z'],restframe=False):
+    def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,params=['L','beta','T','z'],restframe=False):
         """Fit photometry
 
         Fit a modified blackbody to photometry.
@@ -131,32 +131,38 @@ class ModifiedBlackbody:
             nwalkers (int): how many walkers should be used in the MCMC fit. 
             niter (int): how many iterations to run in the fit.
             stepsize (float): stepsize used to randomize the initial walker values. 
-            to_vary (list): list of parameter names, e.g., ['L','beta','T','z','alpha','l0'] to vary in the fit. The rest will be fixed. 'L' should always be included since it reflects the normalization of the model.
+            params (list): list of parameter names, e.g., ['L','beta','T','z','alpha','l0'] to vary in the fit. The rest will be fixed. 'L' should generally be included since it represents the normalization of the model.
             restframe (bool): whether wavelengths in `phot` are given in rest frame (default is observed frame)
         """
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
         if restframe: self._phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
         else: self._phot = (phot[0]/(1.0+self.z),phot[1],phot[2])
+
+        # replace L with N (under the hood, we use N to normalize the model)
+        if 'L' in params: 
+            i = params.index('L')
+            params[i] = 'N'
+
         initdict = self._fit_param_dict()
         try:
-            init = [initdict[key] for key in to_vary]
+            init = [initdict[key] for key in params]
         except KeyError:
             raise ValueError(f'Varied parameters must be one of {list(initdict.keys())}')
         ndim=len(init)
         #set up initial parameters
         fixed = initdict.copy()
-        for key in to_vary: fixed.pop(key)
-        self._to_vary = to_vary
+        for key in params: fixed.pop(key)
+        self._to_vary = params
         p0 = [np.array(init) + stepsize * np.random.randn(ndim) for i in range(nwalkers)]
         #run the MCMC fit
         result = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, lnprob=self._lnprob, 
-            ndim=ndim, to_vary = to_vary, fixed = fixed)#, data = self.phot)
+            ndim=ndim, to_vary = params, fixed = fixed)#, data = self.phot)
         self._fit_result = result
         #get 16,50,84 percentiles of fitted parameters and update
-        medtheta = self._get_theta_spread()
+        med_params = self._get_params_spread()
         updated = initdict
-        for i, key in enumerate(to_vary):
-            updated[key] = medtheta[1][i]
+        for i, key in enumerate(params):
+            updated[key] = med_params[1][i]
         self._update_N(**updated)
         #save chi2 and fitted parameter results in easy to access format
         yprime = self.phot[0]
@@ -166,6 +172,7 @@ class ModifiedBlackbody:
     
     def _get_chain_for_parameter(self, param):
         '''retrieve the chain of walker values for a given parameter that was varied in the fit'''
+        if param == 'L': param = 'N' #switch to N since this is what is in to_vary
         if self.fit_result != None:
             if param in self._to_vary:
                 chain = self.fit_result['sampler'].flatchain[:,:]
@@ -185,7 +192,7 @@ class ModifiedBlackbody:
            m.posterior('beta', q = [16,50,84]) # get median and 16th--84th percentile interval
         
         Args:
-            param (str): name of parameter, one of the 'to_vary' arguments passed to ModifiedBlackbody.fit()
+            param (str): name of parameter, element of the 'params' argument passed to ModifiedBlackbody.fit()
             q (array-like of float): percentile or sequence of percentiles to compute from the posterior distribution
             
         Returns:
@@ -207,7 +214,7 @@ class ModifiedBlackbody:
         if z: self.z = z
         if alpha: self.alpha = alpha
         if l0: self.l0 = l0
-        if L: 
+        if L: #update N and L consistently
             Lcurr = np.log10(self.get_luminosity((8,1000)).value)
             while((Lcurr > (L+0.001)) | (Lcurr < (L-0.001))):
                 self.N = self.N * (L/Lcurr)
@@ -222,7 +229,7 @@ class ModifiedBlackbody:
         if beta: self.beta = beta
         if alpha: self.alpha = alpha
         if l0: self.l0 = l0
-        self.L = np.log10(self.get_luminosity((8,1000)).value)
+        self.L = np.log10(self.get_luminosity((8,1000)).value) #update L consistently with N
 
     def plot_sed(self, obs_frame=False,ax=None):
         """plot the rest-frame form of this mbb just for basic visualization. It is recommended 
@@ -430,9 +437,9 @@ class ModifiedBlackbody:
         flattened_chain = self.fit_result['sampler'].flatchain
         draw = np.floor(np.random.uniform(0,len(flattened_chain),
             size=nsamples)).astype(int)
-        thetas = flattened_chain[draw]
+        params = flattened_chain[draw]
         p = self._fit_param_dict()
-        for t in thetas:
+        for t in params:
             for i,key in enumerate(self._to_vary): # which parameters did we vary
                 p[key] = t[i] # replace that parameter with fitted parameter
             mod = self._model(lam,**p)
@@ -441,13 +448,13 @@ class ModifiedBlackbody:
         lb,med_model,ub = np.nanpercentile(models,[16,50,84],axis=0)
         return med_model, lb, ub
 
-    def _get_theta_spread(self):
+    def _get_params_spread(self):
         """
-        Function to get the median, 16th, and 84th percentile of the fit parameters (called theta in emcee)
+        Function to get the median, 16th, and 84th percentile of all the fit parameters
         """
-        thetas = self.fit_result['sampler'].flatchain
-        theta_res = np.nanpercentile(thetas,[16,50,84],axis=0)
-        return theta_res
+        params = self.fit_result['sampler'].flatchain
+        params_res = np.nanpercentile(params,[16,50,84],axis=0)
+        return params_res
 
     def _select_model(self):
         """
@@ -457,34 +464,34 @@ class ModifiedBlackbody:
         """
         return partial(mbb_func, opthin=self.opthin, pl=self.pl)
 
-    def _lnlike(self, theta, **kwargs):
+    def _lnlike(self, params, **kwargs):
         x = self.phot[0]
         y = self.phot[1]
         yerr = self.phot[2]
-        ymodel = self._model(x, **theta, **kwargs)
+        ymodel = self._model(x, **params, **kwargs)
         wres = np.sum(((y-ymodel)/yerr)**2)
         lnlike = -0.5*wres
         if np.isnan(lnlike):
             return -np.inf
         return lnlike
         
-    def _lnprior(self, theta):
-        if 'T' in theta.keys():
-            T = theta['T']
+    def _lnprior(self, params):
+        if 'T' in params.keys():
+            T = params['T']
             if T < 5 or T > 120: return -np.inf
-        if 'beta' in theta.keys(): 
-            beta = theta['beta']
+        if 'beta' in params.keys(): 
+            beta = params['beta']
             if beta > 5.0 or beta < 0.1: return -np.inf
-        if 'z' in theta.keys(): 
-            z = theta['z']
+        if 'z' in params.keys(): 
+            z = params['z']
             if z > 12.0 or z < 0.1: return -np.inf
         return 0.0
 
-    def _lnprob(self, theta, **kwargs):
-        lp = self._lnprior(theta)
+    def _lnprob(self, params, **kwargs):
+        lp = self._lnprior(params)
         if not np.isfinite(lp):
             return -np.inf
-        return lp + self._lnlike(theta, **kwargs)
+        return lp + self._lnlike(params, **kwargs)
 
 
     def save_out_full(self,filepath):
