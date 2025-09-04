@@ -12,13 +12,9 @@ Feel free to suggest updates/point out issues on the `GitHub page <https://githu
 
 Author: Stephen McKay, 2023
 
-.. image::
-
-   mbb_1.png
+.. image:: mbb_1.png
    
-.. image::
-
-   corner_1.png
+.. image:: corner_1.png
 
 Installation
 ------------------

@@ -79,7 +79,7 @@ class ModifiedBlackbody:
         self._phot=None
         self._chi2 = None
         self._n_bands = None
-        self._n_dof = None
+        self._n_params = None
     
     #read-only attributes
     @property
@@ -111,8 +111,8 @@ class ModifiedBlackbody:
         return self._chi2
     
     @property
-    def n_dof(self):
-        return self._n_dof
+    def n_params(self):
+        return self._n_params
     
     @property
     def n_bands(self):
