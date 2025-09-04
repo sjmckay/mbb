@@ -172,12 +172,15 @@ class ModifiedBlackbody:
                 chain = self.fit_result['sampler'].flatchain[:,:]
                 where = np.where(np.array(self._to_vary) == param)[0]
                 return np.squeeze(chain[:,where])
+            else:
+                raise KeyError(f'Cannot get chain for "{param}" since it was not varied in the fit.')
         return None
     
     def posterior(self,param,q=[16,50,84]):
         '''Determine the posterior values of a given fit parameter.
 
         Example: 
+        
         .. code-block:: python
             m.posterior('beta', q = [16,50,84]) # get median and 16th--84th percentile interval
         
@@ -186,12 +189,16 @@ class ModifiedBlackbody:
             q (array-like of float): percentile or sequence of percentiles to compute from the posterior distribution
             
         Returns:
-            float or array: the percentiles of '''
-        try:
-            chain = self._get_chain_for_parameter(param)
-            return np.percentile(chain, q=q)
-        except Exception as e:
-            raise Exception(f"Unable to get posterior for parameter {param}: failed with error '{e}'")
+            float or array: the percentiles of the posterior distribution for parameter 'param'
+        '''
+        if self.fit_result != None:
+            try:
+                chain = self._get_chain_for_parameter(param)
+                return np.nanpercentile(chain, q=q)
+            except Exception as e:
+                raise Exception(f"Unable to get posterior for parameter {param}: failed with error '{e}'")
+        else: raise AttributeError(f'No fit has been run yet, so no posterior for {param} exists.')
+            
 
     def update(self, L=None, T=None, beta=None,z=None,alpha=None,l0=None):
         """ update modified blackbody parameters (not the underlying model)."""
