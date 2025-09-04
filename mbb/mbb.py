@@ -77,10 +77,8 @@ class ModifiedBlackbody:
         self._to_vary = None
         self._fit_result = None
         self._phot=None
-        self._chi2 = None
-        self._n_bands = None
-        self._n_params = None
     
+
     #read-only attributes
     @property
     def pl(self):
@@ -102,28 +100,23 @@ class ModifiedBlackbody:
     def dust_mass(self):
         return self._compute_dust_mass()
     
-    @property
+    @property 
     def phot(self):
         return self._phot
 
-    @property
-    def chi2(self):
-        return self._chi2
-    
-    @property
-    def n_params(self):
-        return self._n_params
-    
-    @property
-    def n_bands(self):
-        return self._n_bands
 
-    def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,params=['L','beta','T','z'],restframe=False):
+    def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,params=['L','beta','T'],restframe=False):
         """Fit photometry
 
         Fit a modified blackbody to photometry.
-        Updates the parameters of this MBB model to the best-fit parameters of the fit, and populates the "fit_result"
+        Updates the parameters of this MBB model to the best-fit parameters of the fit, and populates the ``fit_result``
         attribute of the ModifiedBlackbody with the fit results.
+
+        The ``fit_result`` attribute is a dictionary containing the following:
+            - ``sampler``: an emcee.EnsembleSampler represnting the chain of walker values from the fit.
+            - ``chi2``: the raw chi-squared value at the end of the fitting process.
+            - ``n_params``: the number of fitted parameters.
+            - ``n_bands``: the number of bands in the fit (the length of ``phot``)
 
         Args:
             phot (array-like): wavelengths and photometry, arranged as a 3 x N array (wavelength, flux, error). 
@@ -131,7 +124,8 @@ class ModifiedBlackbody:
             nwalkers (int): how many walkers should be used in the MCMC fit. 
             niter (int): how many iterations to run in the fit.
             stepsize (float): stepsize used to randomize the initial walker values. 
-            params (list): list of parameter names, e.g., ['L','beta','T','z','alpha','l0'] to vary in the fit. The rest will be fixed. 'L' should generally be included since it represents the normalization of the model.
+            params (list): list of parameter names, e.g., ['L','beta','T','z','alpha','l0'] to vary in the fit. The rest will be fixed. 
+            'L' should generally be included since it represents the normalization of the model. Currently, flat priors are assumed on all varied parameters.
             restframe (bool): whether wavelengths in `phot` are given in rest frame (default is observed frame)
         """
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
@@ -155,9 +149,9 @@ class ModifiedBlackbody:
         self._to_vary = params
         p0 = [np.array(init) + stepsize * np.random.randn(ndim) for i in range(nwalkers)]
         #run the MCMC fit
-        result = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, lnprob=self._lnprob, 
+        sampler = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, lnprob=self._lnprob, 
             ndim=ndim, to_vary = params, fixed = fixed)#, data = self.phot)
-        self._fit_result = result
+        self._fit_result = {'sampler':sampler}
         #get 16,50,84 percentiles of fitted parameters and update
         med_params = self._get_params_spread()
         updated = initdict
@@ -165,25 +159,46 @@ class ModifiedBlackbody:
             updated[key] = med_params[1][i]
         self._update_N(**updated)
         #save chi2 and fitted parameter results in easy to access format
-        yprime = self.phot[0]
-        self._chi2 = np.nansum( (self.phot[1]-yprime)**2/self.phot[2]**2 )
-        self._n_params = ndim
-        self._n_bands = len(self.phot[0])
+        yprime = self.eval(self.phot[0],z=0).value
+        self._fit_result['chi2'] = np.nansum( (self.phot[1]-yprime)**2/self.phot[2]**2 )
+        self._fit_result['n_params'] = ndim
+        self._fit_result['n_bands'] = len(self.phot[0])
     
+
+    def reset(self):
+        '''Clear the fit results.
+        
+        Clear the ModifiedBlackbody fit results and photometry. Current values of parameters (L, beta, etc) will remain unchanged.
+        
+        '''
+        self._to_vary = None
+        self._fit_result = None
+        self._phot=None
+
+
     def _get_chain_for_parameter(self, param):
         '''retrieve the chain of walker values for a given parameter that was varied in the fit'''
-        if param == 'L': param = 'N' #switch to N since this is what is in to_vary
         if self.fit_result != None:
-            if param in self._to_vary:
-                chain = self.fit_result['sampler'].flatchain[:,:]
+            if param == 'L' and 'N' in self._to_vary: 
+                params = self._fit_param_dict()
+                lirs = []
+                chain = self.fit_result['sampler'].get_chain(flat=True)[:,:]            
+                for i in range(len(chain)):
+                    p = params.copy()
+                    for j, key in enumerate(self._to_vary): p[key] = chain[i][j]
+                    lirs.append(np.log10(self._integrate_mbb(**p,wllimits=(8,1000)).value))
+                return np.asarray(lirs)
+            elif param in self._to_vary:
+                chain = self.fit_result['sampler'].get_chain(flat=True)[:,:]
                 where = np.where(np.array(self._to_vary) == param)[0]
                 return np.squeeze(chain[:,where])
             else:
                 raise KeyError(f'Cannot get chain for "{param}" since it was not varied in the fit.')
         return None
     
-    def posterior(self,param,q=[16,50,84]):
-        '''Determine the posterior values of a given fit parameter.
+
+    def post_percentile(self,param,q=[16,50,84]):
+        '''Determine the posterior percentile values of a given fit parameter.
 
         Example: 
 
@@ -205,6 +220,24 @@ class ModifiedBlackbody:
             except Exception as e:
                 raise Exception(f"Unable to get posterior for parameter {param}: failed with error '{e}'")
         else: raise AttributeError(f'No fit has been run yet, so no posterior for {param} exists.')
+
+
+    def posterior(self,param):
+        '''Determine the posterior chain of a given fit parameter.
+
+        Args:
+            param (str): name of parameter, element of the 'params' argument passed to ModifiedBlackbody.fit()
+            
+        Returns:
+            array: the chain of values in the posterior distribution for parameter 'param'
+        '''
+        if self.fit_result != None:
+            try:
+                chain = self._get_chain_for_parameter(param)
+                return chain
+            except Exception as e:
+                raise Exception(f"Unable to get posterior for parameter {param}: failed with error '{e}'")
+        else: raise AttributeError(f'No fit has been run yet, so no posterior for {param} exists.')
             
 
     def update(self, L=None, T=None, beta=None,z=None,alpha=None,l0=None):
@@ -221,6 +254,7 @@ class ModifiedBlackbody:
                 Lcurr = np.log10(self.get_luminosity((8,1000)).value)
             self.L = np.round(Lcurr,2)
 
+
     def _update_N(self, N=None, T=None, beta=None,z=None,alpha=None,l0=None):
         """ update modified blackbody parameters (not model), using N rather than luminosity (used in fitting). """
         if N: self.N = N
@@ -230,6 +264,7 @@ class ModifiedBlackbody:
         if alpha: self.alpha = alpha
         if l0: self.l0 = l0
         self.L = np.log10(self.get_luminosity((8,1000)).value) #update L consistently with N
+
 
     def plot_sed(self, obs_frame=False,ax=None):
         """plot the rest-frame form of this mbb just for basic visualization. It is recommended 
@@ -281,6 +316,7 @@ class ModifiedBlackbody:
         ax.annotate(r'$T$ '+f'= {np.round(self.T,1)} K', xy=(0.02, 0.79), xycoords = 'axes fraction')
         return fig, ax
     
+
     def plot_corner(self,**kwargs):
         """ 
         Plot a corner plot showing the results from the MCMC fit to the data. All kwargs will be passed on to `corner.corner()`.
@@ -288,17 +324,11 @@ class ModifiedBlackbody:
         Returns:
             matplotlib.pyplot.figure: the current figure
         """
-        data = self.fit_result['sampler'].flatchain[::10,:]
-        n = len(data)
-        params = self._fit_param_dict()
+        data = self.fit_result['sampler'].get_chain(flat=True)[::10,:]
         labels = {'T':r'$T$','beta':r'$\beta$','N':r'$L_{\rm IR}$','z':r'$z$','alpha':r'$\alpha$','l0':r'$\lambda_0$'}
         if 'N' in self._to_vary:
-            lirs=[]
-            for i in range(len(data)):
-                p = params.copy()
-                for j, key in enumerate(self._to_vary): p[key] = data[i][j]
-                lirs.append(np.log10(self._integrate_mbb(**p,wllimits=(8,1000)).value))
-            lirs = np.asarray(lirs).reshape(len(lirs),1)
+            lirs = self._get_chain_for_parameter('L')[::10]
+            lirs = lirs.reshape(len(lirs),1)
             whereN = np.where(np.array(self._to_vary) == 'N')[0]
             data[:,whereN] = lirs
         fig = corner.corner(
@@ -309,6 +339,7 @@ class ModifiedBlackbody:
         **kwargs
         )
         return fig
+
 
     def eval(self, wl,z=None):
         """Evaluate MBB at wavelength
@@ -329,6 +360,7 @@ class ModifiedBlackbody:
             params['z']=z
         return self._eval_mbb(wl, **params)
 
+
     def _eval_mbb(self, wl, N, T, beta, z=0,alpha=2,l0=200):
         """Return evaluation of this MBB's function but with variable parameters. See docs for eval()"""
         return self._model(wl/(1+z),N=N,beta=beta,T=T, z=z,alpha=alpha,l0=l0)*u.Jy
@@ -347,6 +379,7 @@ class ModifiedBlackbody:
          """
 
         return self._integrate_mbb(**self._fit_param_dict(), wllimits=wllimits,cosmo=cosmo)
+
 
     def get_peak_wavelength(self):
         '''Get the peak (rest-frame) wavelength of this ModifiedBlackbody, in microns.'''
@@ -388,7 +421,7 @@ class ModifiedBlackbody:
         dustmass = Snu * DL**2 / kappa_B_T / (1.+self.z)
         return dustmass.to(u.Msun)
 
-    def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCPU,to_vary=['N','beta','T','z'], fixed=None):
+    def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCPU,to_vary=['N','beta','T'], fixed=None):
         """
         Function to handle the actual MCMC fitting routine of this ModifiedBlackbody's internal model.
 
@@ -411,9 +444,9 @@ class ModifiedBlackbody:
             p0, _, _ = sampler.run_mcmc(p0, NBURN,progress=True)
             sampler.reset()
             print("Running fitter...")
-            pos, prob, state = sampler.run_mcmc(p0, niter,progress=True)
+            state = sampler.run_mcmc(p0, niter,progress=True)
             print("Done\n")
-        return {'sampler':sampler, 'pos':pos, 'prob':prob, 'state':state}  
+        return sampler
     
 
     def _fit_param_dict(self):
@@ -434,7 +467,7 @@ class ModifiedBlackbody:
             tuple of arrays (float, float, float): the median, 16th, and 84th percentile of the spectrum.
         """
         models = []
-        flattened_chain = self.fit_result['sampler'].flatchain
+        flattened_chain = self.fit_result['sampler'].get_chain(flat=True)
         draw = np.floor(np.random.uniform(0,len(flattened_chain),
             size=nsamples)).astype(int)
         params = flattened_chain[draw]
@@ -449,10 +482,9 @@ class ModifiedBlackbody:
         return med_model, lb, ub
 
     def _get_params_spread(self):
+        """Get the median, 16th, and 84th percentile of all the fit parameters.
         """
-        Function to get the median, 16th, and 84th percentile of all the fit parameters
-        """
-        params = self.fit_result['sampler'].flatchain
+        params = self.fit_result['sampler'].get_chain(flat=True)
         params_res = np.nanpercentile(params,[16,50,84],axis=0)
         return params_res
 

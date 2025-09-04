@@ -13,6 +13,6 @@ dependencies = [
 "numpy",
 "scipy",
 "emcee",
-"corner"
+"corner",
 "tqdm"
 ]

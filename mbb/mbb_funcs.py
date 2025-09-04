@@ -52,7 +52,7 @@ def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False)
     """ MBB function with optional powerlaw and variable opacity assumptions
 
     Args:
-        l (float): the rest-frame wavelengths at which to evaluate the model.
+        l (float): the rest-frame wavelengths, in microns, at which to evaluate the model.
         N (float): log10 normalization factor of blackbody
         beta (float): emissivity index
         T (float): effective dust temperature
@@ -62,7 +62,7 @@ def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False)
         opthin (bool): Whether or not the model should assume optically thin dust emission.
         pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
     Returns:
-        float: the value(s) of the model at wavelengths ``l``
+        float: the value(s) of the model in Jy at wavelengths ``l``, in microns
     """
     if pl:
         if opthin: return ot_mbb(l, N,beta,T,z,l0=l0) + ot_pl(l,N,beta,T,alpha,l0=l0) 
