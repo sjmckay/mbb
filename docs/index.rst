@@ -12,6 +12,8 @@ Feel free to suggest updates/point out issues on the `GitHub page <https://githu
 
 Author: Stephen McKay, 2023
 
+![](alma_48.pdf)
+![](alma_48_corner.pdf)
 
 Installation
 ------------------

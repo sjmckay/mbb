@@ -118,7 +118,7 @@ class ModifiedBlackbody:
     def n_bands(self):
         return self._n_bands
 
-    def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,to_vary=['N','beta','T','z'],restframe=False):
+    def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,to_vary=['L','beta','T','z'],restframe=False):
         """Fit photometry
 
         Fit a modified blackbody to photometry.
@@ -131,7 +131,7 @@ class ModifiedBlackbody:
             nwalkers (int): how many walkers should be used in the MCMC fit. 
             niter (int): how many iterations to run in the fit.
             stepsize (float): stepsize used to randomize the initial walker values. 
-            to_vary (list): list of parameter names, e.g., ['N','beta','T','z','alpha','l0'] to vary in the fit. The rest will be fixed.
+            to_vary (list): list of parameter names, e.g., ['L','beta','T','z','alpha','l0'] to vary in the fit. The rest will be fixed. 'L' should always be included since it reflects the normalization of the model.
             restframe (bool): whether wavelengths in `phot` are given in rest frame (default is observed frame)
         """
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
