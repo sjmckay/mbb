@@ -22,15 +22,17 @@ Installation
 ------------------
 The simplest way to install ``mbb`` is with ``pip``; e.g., ``pip install mbb``.
 
+Examples
+---------
 .. toctree::
    :maxdepth: 1
-   :caption: Examples
 
    quickstart.rst
 
+Documentation
+-------------
 .. toctree::
    :maxdepth: 1
-   :caption: Documentation
 
    mbb.rst
    mbb_funcs.rst
