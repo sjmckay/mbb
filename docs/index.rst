@@ -22,9 +22,11 @@ Installation
 ------------------
 The simplest way to install ``mbb`` is with ``pip``; e.g., ``pip install mbb``.
 
-Examples
---------
-Coming soon!
+.. toctree::
+   :maxdepth: 1
+   :caption: Examples
+
+   quickstart.rst
 
 .. toctree::
    :maxdepth: 1
@@ -33,8 +35,8 @@ Coming soon!
    mbb.rst
    mbb_funcs.rst
 
-Indices and tables
-------------------
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. Indices and tables
+.. ------------------
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
