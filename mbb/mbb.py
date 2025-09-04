@@ -103,6 +103,10 @@ class ModifiedBlackbody:
         return self._compute_dust_mass()
     
     @property
+    def phot(self):
+        return self._phot
+
+    @property
     def chi2(self):
         return self._chi2
     
