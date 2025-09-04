@@ -67,7 +67,7 @@ class ModifiedBlackbody:
         self.opthin=opthin
         self.alpha=alpha
         self.l0=l0
-        self.model = self._select_model()
+        self._model = self._select_model()
         self.N = 11
         Lcurr = np.log10(self.get_luminosity((8,1000)).value)
         while((Lcurr > (L+0.0001)) | (Lcurr < (L-0.0001))):
@@ -75,12 +75,55 @@ class ModifiedBlackbody:
             Lcurr = np.log10(self.get_luminosity((8,1000)).value)
         self.L = np.round(Lcurr,2)
         self.dust_mass = self._compute_dust_mass()
+        self._to_vary = None
+        self.fit_result = None
+        self.phot=None
+        self.chi2 = None
+        self.n_bands = None
+        self.n_dof = None
+    
+    #read-only attributes
+    @property
+    def pl(self):
+        return self.pl
+    
+    @property
+    def opthin(self):
+        return self.opthin
+    
+    @property
+    def model(self)
+        return self._model
+    
+    @property
+    def fit_result(self):
+        return self.fit_result
+
+    @property
+    def dust_mass(self):
+        return self.dust_mass
+
+    @property
+    def dust_mass(self):
+        return self.dust_mass  
+    
+    @property
+    def chi2(self):
+        return self.chi2
+    
+    @property
+    def n_dof(self):
+        return self.n_dof
+    
+    @property
+    def n_bands(self):
+        return self.n_bands
 
     def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,to_vary=['N','beta','T','z'],restframe=False):
         """Fit photometry
 
         Fit a modified blackbody to photometry.
-        Updates the parameters of this MBB model to the best-fit parameters of the fit, and populates the "_result"
+        Updates the parameters of this MBB model to the best-fit parameters of the fit, and populates the "fit_result"
         attribute of the ModifiedBlackbody with the fit results.
 
         Args:
@@ -101,21 +144,57 @@ class ModifiedBlackbody:
         except KeyError:
             raise ValueError(f'Varied parameters must be one of {list(initdict.keys())}')
         ndim=len(init)
+        #set up initial parameters
         fixed = initdict.copy()
         for key in to_vary: fixed.pop(key)
         self._to_vary = to_vary
         p0 = [np.array(init) + stepsize * np.random.randn(ndim) for i in range(nwalkers)]
+        #run the MCMC fit
         result = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, lnprob=self._lnprob, 
             ndim=ndim, to_vary = to_vary, fixed = fixed)#, data = self.phot)
-        self._result = result
-        medtheta = self._get_theta_spread() #get 16,50,84 percentiles of fitted parameters
+        self.fit_result = result
+        #get 16,50,84 percentiles of fitted parameters and update
+        medtheta = self._get_theta_spread()
         updated = initdict
         for i, key in enumerate(to_vary):
             updated[key] = medtheta[1][i]
-        self._update(**updated)
+        self._update_N(**updated)
+        #save chi2 and fitted parameter results in easy to access format
+        yprime = self.phot[0]
+        self.chi2 = np.nansum((self.phot[1]-yprime)**2/self.phot[2]**2)
+        self.n_dof = ndim
+        self.n_bands = len(self.phot[0])
+    
+    def _get_chain_for_parameter(self, param):
+        '''retrieve the chain of walker values for a given parameter that was varied in the fit'''
+        if self.fit_result != None:
+            if param in self._to_vary:
+                chain = self.fit_result['sampler'].flatchain[:,:]
+                where = np.where(np.array(self._to_vary) == param)[0]
+                return np.squeeze(chain[:,where])
+        return None
+    
+    def posterior(self,param,q=[16,50,84]):
+        '''Determine the posterior values of a given fit parameter.
 
-    def update_L(self, L=None, T=None, beta=None,z=None,alpha=None,l0=None):
-        """ update modified blackbody parameters (not model)."""
+        Example: 
+        .. code-block:: python
+            m.posterior('beta', q = [16,50,84]) # get median and 16th--84th percentile interval
+        
+        Args:
+            param (str): name of parameter, one of the 'to_vary' arguments passed to ModifiedBlackbody.fit()
+            q (array-like of float): percentile or sequence of percentiles to compute from the posterior distribution
+            
+        Returns:
+            float or array: the percentiles of '''
+        try:
+            chain = self._get_chain_for_parameter(param)
+            return np.percentile(chain, q=q)
+        except Exception as e:
+            raise Exception(f"Unable to get posterior for parameter {param}: failed with error '{e}'")
+
+    def update(self, L=None, T=None, beta=None,z=None,alpha=None,l0=None):
+        """ update modified blackbody parameters (not the underlying model)."""
         if T: self.T = T 
         if beta: self.beta = beta
         if z: self.z = z
@@ -129,7 +208,7 @@ class ModifiedBlackbody:
             self.L = np.round(Lcurr,2)
         self.dust_mass = self._compute_dust_mass()
 
-    def _update(self, N=None, T=None, beta=None,z=None,alpha=None,l0=None):
+    def _update_N(self, N=None, T=None, beta=None,z=None,alpha=None,l0=None):
         """ update modified blackbody parameters (not model), using N rather than luminosity (used in fitting). """
         if N: self.N = N
         if T: self.T = T 
@@ -155,7 +234,7 @@ class ModifiedBlackbody:
         if ax is None: fig, ax = plt.subplots(figsize=(5,4),dpi=120) 
         else: fig = ax.get_figure()
         x = np.logspace(1,4,500)
-        if hasattr(self, '_result'):
+        if self.fit_result != None:
             nsamples = 200
             y, lb,ub = self._get_model_spread(x)
         else: y = self.eval(x)
@@ -165,10 +244,10 @@ class ModifiedBlackbody:
         else:
             ax.set(xlabel = r'$\lambda$ rest-frame [$\mu$m]', ylabel = 'Flux [mJy]')
         ax.plot(x,y*1000, ls='-',linewidth=0.7,color='k')
-        if hasattr(self, '_result'): 
+        if self.fit_result != None: 
             ax.fill_between(x,lb*1000,ub*1000,color='steelblue',alpha=0.3)
 
-        if hasattr(self,'phot'):
+        if self.phot != None:
             #initialize fitting arrays
             if obs_frame == True:
                 fit_wl = self.phot[0] * (1+self.z)
@@ -198,7 +277,7 @@ class ModifiedBlackbody:
         Returns:
             matplotlib.pyplot.figure: the current figure
         """
-        data = self._result['sampler'].flatchain[::10,:]
+        data = self.fit_result['sampler'].flatchain[::10,:]
         n = len(data)
         params = self._fit_param_dict()
         labels = {'T':r'$T$','beta':r'$\beta$','N':r'$L_{\rm IR}$','z':r'$z$','alpha':r'$\alpha$','l0':r'$\lambda_0$'}
@@ -241,7 +320,7 @@ class ModifiedBlackbody:
 
     def _eval_mbb(self, wl, N, T, beta, z=0,alpha=2,l0=200):
         """Return evaluation of this MBB's function but with variable parameters. See docs for eval()"""
-        return self.model(wl/(1+z),N=N,beta=beta,T=T, z=z,alpha=alpha,l0=l0)*u.Jy
+        return self._model(wl/(1+z),N=N,beta=beta,T=T, z=z,alpha=alpha,l0=l0)*u.Jy
 
 
     def get_luminosity(self, wllimits=(8,1000), cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
@@ -344,7 +423,7 @@ class ModifiedBlackbody:
             tuple of arrays (float, float, float): the median, 16th, and 84th percentile of the spectrum.
         """
         models = []
-        flattened_chain = self._result['sampler'].flatchain
+        flattened_chain = self.fit_result['sampler'].flatchain
         draw = np.floor(np.random.uniform(0,len(flattened_chain),
             size=nsamples)).astype(int)
         thetas = flattened_chain[draw]
@@ -352,7 +431,7 @@ class ModifiedBlackbody:
         for t in thetas:
             for i,key in enumerate(self._to_vary): # which parameters did we vary
                 p[key] = t[i] # replace that parameter with fitted parameter
-            mod = self.model(lam,**p)
+            mod = self._model(lam,**p)
             models.append(mod)
         spread = np.nanstd(models, axis=0)
         lb,med_model,ub = np.nanpercentile(models,[16,50,84],axis=0)
@@ -362,7 +441,7 @@ class ModifiedBlackbody:
         """
         Function to get the median, 16th, and 84th percentile of the fit parameters (called theta in emcee)
         """
-        thetas = self._result['sampler'].flatchain
+        thetas = self.fit_result['sampler'].flatchain
         theta_res = np.nanpercentile(thetas,[16,50,84],axis=0)
         return theta_res
 
@@ -378,7 +457,7 @@ class ModifiedBlackbody:
         x = self.phot[0]
         y = self.phot[1]
         yerr = self.phot[2]
-        ymodel = self.model(x, **theta, **kwargs)
+        ymodel = self._model(x, **theta, **kwargs)
         wres = np.sum(((y-ymodel)/yerr)**2)
         lnlike = -0.5*wres
         if np.isnan(lnlike):
