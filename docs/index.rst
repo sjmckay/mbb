@@ -14,11 +14,11 @@ Author: Stephen McKay, 2023
 
 .. image::
 
-   alma_48.pdf
+   mbb_1.png
    
 .. image::
-   
-   alma_48_corner.pdf
+
+   corner_1.png
 
 Installation
 ------------------
