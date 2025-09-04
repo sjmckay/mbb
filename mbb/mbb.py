@@ -160,8 +160,8 @@ class ModifiedBlackbody:
         self._update_N(**updated)
         #save chi2 and fitted parameter results in easy to access format
         yprime = self.phot[0]
-        self._chi2 = np.nansum((self.phot[1]-yprime)**2/self.phot[2]**2)
-        self._n_dof = ndim
+        self._chi2 = np.nansum( (self.phot[1]-yprime)**2/self.phot[2]**2 )
+        self._n_params = ndim
         self._n_bands = len(self.phot[0])
     
     def _get_chain_for_parameter(self, param):
