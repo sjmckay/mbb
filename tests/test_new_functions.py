@@ -14,5 +14,6 @@ if __name__ == "__main__":
     # plt.title('m1')
 
     m1.fit(phot=([850/5.],[0.0021],[0.00032]),niter=10,to_vary=['N'],restframe=True)
-    m1
+    print(m1.posterior('N'))
+    print(m1.posterior('beta'))
 

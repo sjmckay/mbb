@@ -63,8 +63,8 @@ class ModifiedBlackbody:
         self.T = T 
         self.beta = beta 
         self.z = z
-        self.pl = pl
-        self.opthin=opthin
+        self._pl = pl
+        self._opthin=opthin
         self.alpha=alpha
         self.l0=l0
         self._model = self._select_model()
@@ -74,50 +74,45 @@ class ModifiedBlackbody:
             self.N = self.N + 0.1*(L-Lcurr)
             Lcurr = np.log10(self.get_luminosity((8,1000)).value)
         self.L = np.round(Lcurr,2)
-        self.dust_mass = self._compute_dust_mass()
         self._to_vary = None
-        self.fit_result = None
-        self.phot=None
-        self.chi2 = None
-        self.n_bands = None
-        self.n_dof = None
+        self._fit_result = None
+        self._phot=None
+        self._chi2 = None
+        self._n_bands = None
+        self._n_dof = None
     
     #read-only attributes
     @property
     def pl(self):
-        return self.pl
+        return self._pl
     
     @property
     def opthin(self):
-        return self.opthin
+        return self._opthin
     
     @property
-    def model(self)
+    def model(self):
         return self._model
     
     @property
     def fit_result(self):
-        return self.fit_result
+        return self._fit_result
 
     @property
     def dust_mass(self):
-        return self.dust_mass
-
-    @property
-    def dust_mass(self):
-        return self.dust_mass  
+        return self._compute_dust_mass()
     
     @property
     def chi2(self):
-        return self.chi2
+        return self._chi2
     
     @property
     def n_dof(self):
-        return self.n_dof
+        return self._n_dof
     
     @property
     def n_bands(self):
-        return self.n_bands
+        return self._n_bands
 
     def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,to_vary=['N','beta','T','z'],restframe=False):
         """Fit photometry
@@ -136,8 +131,8 @@ class ModifiedBlackbody:
             restframe (bool): whether wavelengths in `phot` are given in rest frame (default is observed frame)
         """
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
-        if restframe: self.phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
-        else: self.phot = (phot[0]/(1.0+self.z),phot[1],phot[2])
+        if restframe: self._phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
+        else: self._phot = (phot[0]/(1.0+self.z),phot[1],phot[2])
         initdict = self._fit_param_dict()
         try:
             init = [initdict[key] for key in to_vary]
@@ -152,7 +147,7 @@ class ModifiedBlackbody:
         #run the MCMC fit
         result = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, lnprob=self._lnprob, 
             ndim=ndim, to_vary = to_vary, fixed = fixed)#, data = self.phot)
-        self.fit_result = result
+        self._fit_result = result
         #get 16,50,84 percentiles of fitted parameters and update
         medtheta = self._get_theta_spread()
         updated = initdict
@@ -161,9 +156,9 @@ class ModifiedBlackbody:
         self._update_N(**updated)
         #save chi2 and fitted parameter results in easy to access format
         yprime = self.phot[0]
-        self.chi2 = np.nansum((self.phot[1]-yprime)**2/self.phot[2]**2)
-        self.n_dof = ndim
-        self.n_bands = len(self.phot[0])
+        self._chi2 = np.nansum((self.phot[1]-yprime)**2/self.phot[2]**2)
+        self._n_dof = ndim
+        self._n_bands = len(self.phot[0])
     
     def _get_chain_for_parameter(self, param):
         '''retrieve the chain of walker values for a given parameter that was varied in the fit'''
@@ -180,9 +175,10 @@ class ModifiedBlackbody:
         '''Determine the posterior values of a given fit parameter.
 
         Example: 
-        
+
         .. code-block:: python
-            m.posterior('beta', q = [16,50,84]) # get median and 16th--84th percentile interval
+            
+           m.posterior('beta', q = [16,50,84]) # get median and 16th--84th percentile interval
         
         Args:
             param (str): name of parameter, one of the 'to_vary' arguments passed to ModifiedBlackbody.fit()
@@ -213,7 +209,6 @@ class ModifiedBlackbody:
                 self.N = self.N * (L/Lcurr)
                 Lcurr = np.log10(self.get_luminosity((8,1000)).value)
             self.L = np.round(Lcurr,2)
-        self.dust_mass = self._compute_dust_mass()
 
     def _update_N(self, N=None, T=None, beta=None,z=None,alpha=None,l0=None):
         """ update modified blackbody parameters (not model), using N rather than luminosity (used in fitting). """
@@ -224,8 +219,6 @@ class ModifiedBlackbody:
         if alpha: self.alpha = alpha
         if l0: self.l0 = l0
         self.L = np.log10(self.get_luminosity((8,1000)).value)
-        self.dust_mass = self._compute_dust_mass()
-
 
     def plot_sed(self, obs_frame=False,ax=None):
         """plot the rest-frame form of this mbb just for basic visualization. It is recommended 
