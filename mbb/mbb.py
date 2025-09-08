@@ -59,7 +59,7 @@ class ModifiedBlackbody:
         opthin (bool): Whether or not the model should assume optically thin dust emission.
         pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
 
-    Note: By default, ModifiedBlackbody assumes a flat $\Lambda$CDM cosmology with $\Omega_m = 0.3$ and $\Omega_\Lambda = 0.7$. If you wish to change this, \
+    Note: By default, ModifiedBlackbody assumes a flat :math:`\Lambda`CDM cosmology with :math:`\Omega_m = 0.3` and :math:`\Omega_\Lambda = 0.7`. If you wish to change this, \
         the code allows you to set the ``cosmo`` attribute of the ModifiedBlackbody to an instance of ``astropy.cosmology`` after it is created. 
     """
 
@@ -68,6 +68,7 @@ class ModifiedBlackbody:
         self.T = T 
         self.beta = beta 
         self.z = z
+        self._cosmo = cosmo
         self._pl = pl
         self._opthin=opthin
         self.alpha=alpha
@@ -83,7 +84,6 @@ class ModifiedBlackbody:
         self._fit_result = None
         self._phot=None
         self._priors = None
-        self._cosmo = cosmo
     
 
     #read-only attributes
@@ -122,7 +122,7 @@ class ModifiedBlackbody:
     @cosmo.setter
     def cosmo(self, new_cosmo):
         if isinstance(new_cosmo, Cosmology):
-            self._cosmo = cosmo
+            self._cosmo = new_cosmo
         else:
             raise ValueError(f"'new_cosmo' must be of type astropy.cosmology.Cosmology, got {type(new_cosmo)}")
 
@@ -148,7 +148,7 @@ class ModifiedBlackbody:
             params (list): list of parameter names, e.g., [``L``, ``beta``, ``T``, ``z``, ``alpha``, ``l0``] to vary in the fit. The rest will be fixed. \
                 ``L`` should generally be included since it represents the normalization of the model. 
             priors (dict): The priors to use in the Bayesian fitting. This should be a dictionary with keys corresponding \
-                to the elements of ``params``. If ``None``, or for any params not included in ``priors``, flat (uniform) priors will be assumed.
+                to the elements of ``params``. (Not fully implemented yet!) If ``None``, or for any params not included in ``priors``, flat (uniform) priors will be assumed.
             restframe (bool): whether wavelengths in ``phot`` are given in the rest frame (default is observed frame)
         """
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape

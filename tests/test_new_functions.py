@@ -16,9 +16,8 @@ if __name__ == "__main__":
     m1.fit(phot=([450, 850],[0.005, 0.0021],[0.0006,0.00032]),niter=10,params=['N','beta'],restframe=False)
     print('after fit:')
     print('850um flux', m1.eval(850,z=m1.z).value*1000,'mJy')
-    print(f'log10 dust mass: {np.log10(m1.dust_mass.value):.2f}')
     print(m1.post_percentile('L'))
-    print(np.median(m1.posterior('L')))
+    # print(np.median(m1.posterior('L')))
 
     try:
         print(m1.posterior('beta')[::2])
@@ -26,9 +25,19 @@ if __name__ == "__main__":
     except Exception as e:
         print(f'Caught exception {e}')
 
-    print(m1.fit_result['sampler'], m1.fit_result['chi2'])
+    # print(m1.fit_result['sampler'], m1.fit_result['chi2'])
 
-    print(m1._get_chain_for_parameter('L').shape, m1._get_chain_for_parameter('beta').shape)
+    # print(m1._get_chain_for_parameter('L').shape, m1._get_chain_for_parameter('beta').shape)
 
-    m1.plot_corner()
-    plt.show()
+    # m1.plot_corner()
+    # plt.show()
+    print('existing cosmo:',m1.cosmo)
+
+    print(f'log10 dust mass: {np.log10(m1.dust_mass.value):.6f}')
+    from astropy.cosmology import Planck18 as nc
+    m1.cosmo = nc
+    print('set new cosmo!')
+    print('new cosmo:',m1.cosmo)
+  
+    print(f'log10 dust mass: {np.log10(m1.dust_mass.value):.6f}')
+    # m1.cosmo = 2.0
