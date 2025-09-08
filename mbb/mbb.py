@@ -60,7 +60,7 @@ class ModifiedBlackbody:
         pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
 
     Note: By default, ModifiedBlackbody assumes a flat :math:`\Lambda` CDM cosmology with :math:`\Omega_m = 0.3` and :math:`\Omega_\Lambda = 0.7`. If you wish to change this, \
-        the code allows you to set the ``cosmo`` attribute of the ModifiedBlackbody to an instance of ``astropy.cosmology`` after it is created. 
+        the code allows you to set the ``cosmo`` attribute of the ModifiedBlackbody to an instance of ``astropy.cosmology.Cosmology`` after it is created. 
     """
 
     def __init__(self, L, T, beta, z, alpha=2.0,l0=200.,opthin=True, pl=False):
