@@ -105,7 +105,7 @@ class ModifiedBlackbody:
         return self._phot
 
 
-    def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,params=['L','beta','T'],restframe=False):
+    def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,params=['L','beta','T'],priors=None,restframe=False):
         """Fit photometry
 
         Fit a modified blackbody to photometry.
@@ -113,7 +113,7 @@ class ModifiedBlackbody:
         attribute of the ModifiedBlackbody with the fit results.
 
         The ``fit_result`` attribute is a dictionary containing the following:
-            - ``sampler``: an emcee.EnsembleSampler represnting the chain of walker values from the fit.
+            - ``sampler``: an ``emcee.EnsembleSampler`` represnting the chain of walker values from the fit.
             - ``chi2``: the raw chi-squared value at the end of the fitting process.
             - ``n_params``: the number of fitted parameters.
             - ``n_bands``: the number of bands in the fit (the length of ``phot``)
@@ -124,8 +124,10 @@ class ModifiedBlackbody:
             nwalkers (int): how many walkers should be used in the MCMC fit. 
             niter (int): how many iterations to run in the fit.
             stepsize (float): stepsize used to randomize the initial walker values. 
-            params (list): list of parameter names, e.g., ['L','beta','T','z','alpha','l0'] to vary in the fit. The rest will be fixed. 
-            'L' should generally be included since it represents the normalization of the model. Currently, flat priors are assumed on all varied parameters.
+            params (list): list of parameter names, e.g., [`L`,`beta`,`T`,`z`,`alpha`,`l0`] to vary in the fit. The rest will be fixed. \
+                `L` should generally be included since it represents the normalization of the model. 
+            priors (dict): The priors to use in the Bayesian fitting. This should be a dictionary with keys corresponding \
+                to the elements of `params`. If `None`, or for any params not included in `priors`, flat (uniform) priors will be assumed.
             restframe (bool): whether wavelengths in `phot` are given in rest frame (default is observed frame)
         """
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
