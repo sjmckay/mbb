@@ -16,7 +16,7 @@ from astropy.io import fits
 import astropy.units as u
 import astropy.constants as con
 from astropy.constants import c, k_B, h
-from astropy.cosmology import FlatLambdaCDM
+from astropy.cosmology import FlatLambdaCDM, Cosmology
 cosmo = FlatLambdaCDM(H0=70.0, Om0=0.30) 
 
 from functools import partial
@@ -45,8 +45,9 @@ from .mbb_funcs import mbb_func, planckbb #mbb_fun_ot, mbb_fun_go, mbb_fun_go_pl
 class ModifiedBlackbody:
     """Class to represent a modified blackbody (or MBB).
     
-    This class can be used to encapsulate a single MBB model, or to perform an SED fit to photometry. The results can be easily plotted or updated as needed, and various parameters/statistics can be extracted.
-    The models are based off of `Casey et al. (2012) <https://doi.org/10.1111/j.1365-2966.2012.21455.x>`_.
+    This class can be used to encapsulate a single MBB model, or to perform an SED fit to photometry. The results can be easily plotted \
+        or updated as needed, and various parameters/statistics can be extracted. The models are based off of \
+        `Casey et al. (2012) <https://doi.org/10.1111/j.1365-2966.2012.21455.x>`_.
 
     Args:
         L (float): log10 of luminosity in solar units. If fitting data, this will set the initial guess for the fit.
@@ -57,7 +58,11 @@ class ModifiedBlackbody:
         l0 (float,optional): opacity turnover wavelength in microns.
         opthin (bool): Whether or not the model should assume optically thin dust emission.
         pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
+
+    Note: By default, ModifiedBlackbody assumes a flat $\Lambda$CDM cosmology with $\Omega_m = 0.3$ and $\Omega_\Lambda = 0.7$. If you wish to change this, \
+        the code allows you to set the ``cosmo`` attribute of the ModifiedBlackbody to an instance of ``astropy.cosmology`` after it is created. 
     """
+
     def __init__(self, L, T, beta, z, alpha=2.0,l0=200.,opthin=True, pl=False):
         self.L = L
         self.T = T 
@@ -78,6 +83,7 @@ class ModifiedBlackbody:
         self._fit_result = None
         self._phot=None
         self._priors = None
+        self._cosmo = cosmo
     
 
     #read-only attributes
@@ -108,6 +114,17 @@ class ModifiedBlackbody:
     @property 
     def priors(self):
         return self._priors
+    
+    @property
+    def cosmo(self):
+        return self._cosmo
+    
+    @cosmo.setter
+    def cosmo(self, new_cosmo):
+        if isinstance(new_cosmo, Cosmology):
+            self._cosmo = cosmo
+        else:
+            raise ValueError(f"'new_cosmo' must be of type astropy.cosmology.Cosmology, got {type(new_cosmo)}")
 
     def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,params=['L','beta','T'],priors=None,restframe=False):
         """Fit photometry
@@ -373,19 +390,18 @@ class ModifiedBlackbody:
         return self._model(wl/(1+z),N=N,beta=beta,T=T, z=z,alpha=alpha,l0=l0)*u.Jy
 
 
-    def get_luminosity(self, wllimits=(8,1000), cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
-        """get integrated LIR luminosity for the current MBB state between wavelength limits
+    def get_luminosity(self, wllimits=(8,1000)):
+        """get integrated luminosity for the current MBB state between wavelength limits
          in microns.
 
          Args:
             wllimits (tuple): rest-frame wavelength limits in microns (lo, hi) between which to integrate
-            cosmo (astropy.cosmology): cosmology used for computing luminosity distance 
 
          Returns:
             float: the luminosity integrated between rest-frame wavelength limits given by ``wllimits``
          """
 
-        return self._integrate_mbb(**self._fit_param_dict(), wllimits=wllimits,cosmo=cosmo)
+        return self._integrate_mbb(**self._fit_param_dict(), wllimits=wllimits)
 
 
     def get_peak_wavelength(self):
@@ -397,8 +413,7 @@ class ModifiedBlackbody:
         return peak_wl
 
 
-    def _integrate_mbb(self,N,T,beta,z=0,alpha=2,l0=200,wllimits=(8,1000), 
-                       cosmo=FlatLambdaCDM(H0=70.0, Om0=0.30)):
+    def _integrate_mbb(self,N,T,beta,z=0,alpha=2,l0=200,wllimits=(8,1000)):
         """
         integrate a model with given N, beta, T between wllimits in rest-frame. See docs for get_luminosity,
         which is essentially a wrapper for this function.
@@ -410,7 +425,7 @@ class ModifiedBlackbody:
             nuhigh = (con.c/(wllimits[0]*u.um)).to(u.Hz)
             nu = np.linspace(nulow, nuhigh, 20000)
             dnu = nu[1:] - nu[0:-1]
-            DL = cosmo.luminosity_distance(z)
+            DL = self._cosmo.luminosity_distance(z)
             lam = nu.to(u.um, equivalencies=u.spectral()).value  
             lum = np.sum(4*np.pi*DL**2 * self._eval_mbb(lam[:-1],N,T,beta, alpha=alpha,l0=l0) * dnu)/(1+z)
             return lum.to(u.Lsun)
@@ -420,7 +435,7 @@ class ModifiedBlackbody:
         Compute dust mass for this ModifiedBlackbody.
         '''
         l0= 850.
-        DL = cosmo.luminosity_distance(self.z)
+        DL = self._cosmo.luminosity_distance(self.z)
         kappa_B_T = 0.15*u.m**2/u.kg * 1e26 * planckbb(l0, T=self.T) #kappa coeff: 
                                                                         # 0.0469 taken from Traina+2024/Draine+14 at 850um
                                                                         # 0.15 from Casey+12 at 850um
