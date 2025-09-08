@@ -59,7 +59,7 @@ class ModifiedBlackbody:
         opthin (bool): Whether or not the model should assume optically thin dust emission.
         pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
 
-    Note: By default, ModifiedBlackbody assumes a flat :math:`\Lambda`CDM cosmology with :math:`\Omega_m = 0.3` and :math:`\Omega_\Lambda = 0.7`. If you wish to change this, \
+    Note: By default, ModifiedBlackbody assumes a flat :math:`\Lambda` CDM cosmology with :math:`\Omega_m = 0.3` and :math:`\Omega_\Lambda = 0.7`. If you wish to change this, \
         the code allows you to set the ``cosmo`` attribute of the ModifiedBlackbody to an instance of ``astropy.cosmology`` after it is created. 
     """
 
