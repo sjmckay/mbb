@@ -196,7 +196,7 @@ class ModifiedBlackbody:
     def reset(self):
         '''Clear the fit results.
         
-        Clear the ModifiedBlackbody fit results, priors, and photometry. Current values of parameters (L, beta, etc) will remain unchanged.
+        Clear the ModifiedBlackbody fit results, priors, and photometry. Current values of parameters (``L``, ``beta``, etc) will remain unchanged.
         
         '''
         self._to_vary = None
