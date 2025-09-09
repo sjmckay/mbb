@@ -11,6 +11,8 @@ import numpy as np
 import emcee
 import corner
 
+import warnings
+
 from astropy.table import Table, QTable
 from astropy.io import fits
 import astropy.units as u
@@ -147,14 +149,17 @@ class ModifiedBlackbody:
             stepsize (float): stepsize used to randomize the initial walker values. 
             params (list): list of parameter names, e.g., [``L``, ``beta``, ``T``, ``z``, ``alpha``, ``l0``] to vary in the fit. The rest will be fixed. \
                 ``L`` should generally be included since it represents the normalization of the model. 
-            priors (dict): The priors to use in the Bayesian fitting. This should be a dictionary with keys corresponding \
-                to the elements of ``params``. (Not fully implemented yet!) If ``None``, or for any params not included in ``priors``, flat (uniform) priors will be assumed.
+            priors (dict): Priors to use in the Bayesian fitting. This should be a dictionary with keys corresponding \
+                to the elements of ``params``. For each key, the corresponding value can be either (1) a function that takes the value of the parameter and \
+                returns a number between 0.0 and 1.0, or (2) a dictionary with keys 'mu' and 'sigma', in which case the code will use these to \
+                generate a Gaussian prior on that parameter. If ``None``, or for any params not included in ``priors``, flat (uniform) priors will be assumed. \
+                Currently, ``T`` is constrained to be between 5 K and 120 K, ``beta`` is between 0.1 and 5.0, and ``z`` is between 0.1 and 12.
             restframe (bool): whether wavelengths in ``phot`` are given in the rest frame (default is observed frame)
         """
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
         if restframe: self._phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
         else: self._phot = (phot[0]/(1.0+self.z),phot[1],phot[2])
-
+        self._priors = priors
         # replace L with N (under the hood, we use N to normalize the model)
         if 'L' in params: 
             i = params.index('L')
@@ -528,7 +533,9 @@ class ModifiedBlackbody:
         if np.isnan(lnlike):
             return -np.inf
         return lnlike
-        
+    
+
+
     def _lnprior(self, params):
         if 'T' in params.keys():
             T = params['T']
@@ -539,7 +546,24 @@ class ModifiedBlackbody:
         if 'z' in params.keys(): 
             z = params['z']
             if z > 12.0 or z < 0.1: return -np.inf
-        return 0.0
+        
+        def ln_gauss(x,mu,sigma):
+            return -(x - mu) ** 2 / (2 * sigma ** 2)
+
+        #determine prior based on multiplying individual prior functions (addition in log space)
+        if self._priors == None: return 0.0
+        lnpriors = 0.0
+        for p in params.keys():
+            if p in self._priors.keys():
+                try:
+                    if type(self._priors[p]) == dict:
+                        val = ln_gauss(params[p], mu=self._priors[p]['mu'], sigma=self._priors[p]['sigma'])
+                    else: val = np.log(self._priors[p](params[p]))
+                except KeyError as e: # if no prior available, use uniform prior
+                    warnings.warn(f'Received error "{e}" due to incompatible prior for param "{p}"')
+                    val = 0.0
+                if not np.isnan(val) and val <= 0.0: lnpriors += val
+        return lnpriors
 
     def _lnprob(self, params, **kwargs):
         lp = self._lnprior(params)

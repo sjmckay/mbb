@@ -13,21 +13,16 @@ if __name__ == "__main__":
     print(f'peak wl: {m1.get_peak_wavelength():.2f}')
 
 
-    m1.fit(phot=([450, 850],[0.005, 0.0021],[0.0006,0.00032]),niter=10,params=['N','beta'],restframe=False)
+    m1.fit(phot=([450, 850],[0.005, 0.0021],[0.0006,0.00032]),niter=10,params=['L','beta'],restframe=False)
     print('after fit:')
     print('850um flux', m1.eval(850,z=m1.z).value*1000,'mJy')
-    print(m1.post_percentile('L'))
-    # print(np.median(m1.posterior('L')))
+    print('beta', m1.beta)
 
     try:
         print(m1.posterior('beta')[::2])
         print(m1.beta)
     except Exception as e:
         print(f'Caught exception {e}')
-
-    # print(m1.fit_result['sampler'], m1.fit_result['chi2'])
-
-    # print(m1._get_chain_for_parameter('L').shape, m1._get_chain_for_parameter('beta').shape)
 
     # m1.plot_corner()
     # plt.show()
@@ -40,4 +35,30 @@ if __name__ == "__main__":
     print('new cosmo:',m1.cosmo)
   
     print(f'log10 dust mass: {np.log10(m1.dust_mass.value):.6f}')
-    # m1.cosmo = 2.0
+
+
+    print('*'*50)
+    print('    NEW FIT    ')
+    m1.reset()
+
+    def my_prior_b(b):
+        return np.exp(-(b - 2.3) ** 2 / (2 * 0.3 ** 2))
+    m1.fit(phot=([450, 850],[0.005, 0.0021],[0.0006,0.00032]),niter=10,params=['L','beta'],restframe=False,priors = {'beta':dict(mu=2.5,sigma=0.1)})
+    print('after fit:')
+    print('850um flux', m1.eval(850,z=m1.z).value*1000,'mJy')
+    print('beta', m1.beta)
+    m1.plot_sed()
+
+
+    def my_prior_T(T):
+        return np.exp(-(T + 15.0) ** 2 / (2 * 10 ** 2))
+    
+    m1.reset()
+    m1.fit(phot=([450, 850],[0.005, 0.0021],[0.0006,0.00032]),niter=10,params=['L','T'],restframe=False,priors = {'T':my_prior_T})
+    print('after fit:')
+    print('850um flux', m1.eval(850,z=m1.z).value*1000,'mJy')
+    print('T', m1.T)
+
+    m1.plot_corner()
+    m1.plot_sed()
+    plt.show()
