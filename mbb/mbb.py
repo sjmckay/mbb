@@ -26,7 +26,7 @@ from functools import partial
 from multiprocessing import Pool
 from multiprocessing import cpu_count
 
-NCPU = cpu_count()
+NCORES = cpu_count()-2
 
 Tcmb0 = 2.75
 
@@ -447,7 +447,7 @@ class ModifiedBlackbody:
         dustmass = Snu * DL**2 / kappa_B_T / (1.+self.z)
         return dustmass.to(u.Msun)
 
-    def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCPU,to_vary=['N','beta','T'], fixed=None):
+    def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCORES,to_vary=['N','beta','T'], fixed=None):
         """
         Function to handle the actual MCMC fitting routine of this ModifiedBlackbody's internal model.
 
