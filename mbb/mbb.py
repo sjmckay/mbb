@@ -205,13 +205,13 @@ class ModifiedBlackbody:
         self._priors = None
 
 
-    def _get_chain_for_parameter(self, param):
+    def _get_chain_for_parameter(self, param,skip=1):
         '''retrieve the chain of walker values for a given parameter that was varied in the fit'''
         if self.fit_result != None:
             if param == 'L' and 'N' in self._to_vary: 
                 params = self._fit_param_dict()
                 lirs = []
-                chain = self.fit_result['sampler'].get_chain(flat=True)[:,:]            
+                chain = self.fit_result['sampler'].get_chain(flat=True)[::skip,:]            
                 for i in range(len(chain)):
                     p = params.copy()
                     for j, key in enumerate(self._to_vary): p[key] = chain[i][j]
@@ -355,7 +355,7 @@ class ModifiedBlackbody:
         data = self.fit_result['sampler'].get_chain(flat=True)[::10,:]
         labels = {'T':r'$T$','beta':r'$\beta$','N':r'$L_{\rm IR}$','z':r'$z$','alpha':r'$\alpha$','l0':r'$\lambda_0$'}
         if 'N' in self._to_vary:
-            lirs = self._get_chain_for_parameter('L')[::10]
+            lirs = self._get_chain_for_parameter('L',skip=10)
             lirs = lirs.reshape(len(lirs),1)
             whereN = np.where(np.array(self._to_vary) == 'N')[0]
             data[:,whereN] = lirs

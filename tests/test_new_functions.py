@@ -64,5 +64,6 @@ if __name__ == "__main__":
 
     m1.plot_corner()
     m1.plot_sed(obs_frame=True)
-
     plt.show()
+
+    print('L chain', m1._get_chain_for_parameter('L',skip=200))
