@@ -13,6 +13,8 @@ import corner
 
 import warnings
 
+from copy import deepcopy
+
 # from astropy.table import Table, QTable
 # from astropy.io import fits
 import astropy.units as u
@@ -190,7 +192,7 @@ class ModifiedBlackbody:
         self._fit_result['chi2'] = np.nansum( (self._phot[1]-yprime)**2/self._phot[2]**2 )
         self._fit_result['n_params'] = ndim
         self._fit_result['n_bands'] = len(self._phot[0])
-    
+        return deepcopy(self._fit_result)
 
     def reset(self):
         '''Clear the fit results.
