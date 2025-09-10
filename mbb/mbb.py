@@ -13,8 +13,8 @@ import corner
 
 import warnings
 
-from astropy.table import Table, QTable
-from astropy.io import fits
+# from astropy.table import Table, QTable
+# from astropy.io import fits
 import astropy.units as u
 import astropy.constants as con
 from astropy.constants import c, k_B, h
@@ -23,8 +23,7 @@ cosmo = FlatLambdaCDM(H0=70.0, Om0=0.30)
 
 from functools import partial
 
-from multiprocessing import Pool
-from multiprocessing import cpu_count
+from multiprocessing import Pool, cpu_count
 
 NCORES = cpu_count()-2
 
@@ -128,7 +127,7 @@ class ModifiedBlackbody:
         else:
             raise ValueError(f"'new_cosmo' must be of type astropy.cosmology.Cosmology, got {type(new_cosmo)}")
 
-    def fit(self, phot, nwalkers=400, niter=2000, stepsize=1e-7,params=['L','beta','T'],priors=None,restframe=False):
+    def fit(self, phot, nwalkers=400, niter=2000, ncores = NCORES, stepsize=1e-7,params=['L','beta','T'],priors=None,restframe=False):
         """Fit photometry
 
         Fit a modified blackbody to photometry.
@@ -177,7 +176,7 @@ class ModifiedBlackbody:
         self._to_vary = params
         p0 = [np.array(init) + stepsize * np.random.randn(ndim) for i in range(nwalkers)]
         #run the MCMC fit
-        sampler = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, lnprob=self._lnprob, 
+        sampler = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, ncores=ncores, lnprob=self._lnprob, 
             ndim=ndim, to_vary = params, fixed = fixed)#, data = self._phot)
         self._fit_result = {'sampler':sampler}
         #get 16,50,84 percentiles of fitted parameters and update
