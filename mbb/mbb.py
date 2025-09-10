@@ -178,7 +178,7 @@ class ModifiedBlackbody:
         p0 = [np.array(init) + stepsize * np.random.randn(ndim) for i in range(nwalkers)]
         #run the MCMC fit
         sampler = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, lnprob=self._lnprob, 
-            ndim=ndim, to_vary = params, fixed = fixed)#, data = self.phot)
+            ndim=ndim, to_vary = params, fixed = fixed)#, data = self._phot)
         self._fit_result = {'sampler':sampler}
         #get 16,50,84 percentiles of fitted parameters and update
         med_params = self._get_params_spread()
@@ -187,10 +187,10 @@ class ModifiedBlackbody:
             updated[key] = med_params[1][i]
         self._update_N(**updated)
         #save chi2 and fitted parameter results in easy to access format
-        yprime = self.eval(self.phot[0],z=0).value
-        self._fit_result['chi2'] = np.nansum( (self.phot[1]-yprime)**2/self.phot[2]**2 )
+        yprime = self.eval(self._phot[0],z=0).value
+        self._fit_result['chi2'] = np.nansum( (self._phot[1]-yprime)**2/self._phot[2]**2 )
         self._fit_result['n_params'] = ndim
-        self._fit_result['n_bands'] = len(self.phot[0])
+        self._fit_result['n_bands'] = len(self._phot[0])
     
 
     def reset(self):
@@ -271,11 +271,7 @@ class ModifiedBlackbody:
 
     def update(self, L=None, T=None, beta=None,z=None,alpha=None,l0=None):
         """ update modified blackbody parameters (not the underlying model)."""
-        if T: self.T = T 
-        if beta: self.beta = beta
-        if z: self.z = z
-        if alpha: self.alpha = alpha
-        if l0: self.l0 = l0
+        self._update_N(T=T, beta=beta,z=z,alpha=alpha,l0=l0)
         if L: #update N and L consistently
             Lcurr = np.log10(self.get_luminosity((8,1000)).value)
             while((Lcurr > (L+0.001)) | (Lcurr < (L-0.001))):
@@ -287,9 +283,12 @@ class ModifiedBlackbody:
     def _update_N(self, N=None, T=None, beta=None,z=None,alpha=None,l0=None):
         """ update modified blackbody parameters (not model), using N rather than luminosity (used in fitting). """
         if N: self.N = N
-        if T: self.T = T 
-        if z: self.z = z
         if beta: self.beta = beta
+        if T: self.T=T
+        if z: 
+            if self._phot != None: # update rest-frame wavelengths
+                self._phot = (self._phot[0]*(1.0+self.z)/(1.0+z),self._phot[1],self._phot[2])
+            self.z = z
         if alpha: self.alpha = alpha
         if l0: self.l0 = l0
         self.L = np.log10(self.get_luminosity((8,1000)).value) #update L consistently with N
@@ -322,14 +321,14 @@ class ModifiedBlackbody:
         if self.fit_result != None: 
             ax.fill_between(x,lb*1000,ub*1000,color='steelblue',alpha=0.3)
 
-        if self.phot != None:
+        if self._phot != None:
             #initialize fitting arrays
             if obs_frame == True:
-                fit_wl = self.phot[0] * (1+self.z)
+                fit_wl = self._phot[0] * (1+self.z)
             else:
-                fit_wl = self.phot[0] 
-            fit_flux = 1000*self.phot[1] #mJy
-            fit_err = 1000*self.phot[2]
+                fit_wl = self._phot[0] 
+            fit_flux = 1000*self._phot[1] #mJy
+            fit_err = 1000*self._phot[2]
             # check for nondetections and or incorrect input
             mask = (fit_wl < 0) | (fit_flux < 0) | (fit_err < 0)
             fit_wl = fit_wl[~mask]
@@ -524,9 +523,12 @@ class ModifiedBlackbody:
         return partial(mbb_func, opthin=self.opthin, pl=self.pl)
 
     def _lnlike(self, params, **kwargs):
-        x = self.phot[0]
-        y = self.phot[1]
-        yerr = self.phot[2]
+        x = self._phot[0]
+        #reset rest frame wls if z is varied
+        if 'z' in params.keys():
+            x *= (1.0+self.z)/(1.0+params['z'])
+        y = self._phot[1]
+        yerr = self._phot[2]
         ymodel = self._model(x, **params, **kwargs)
         wres = np.sum(((y-ymodel)/yerr)**2)
         lnlike = -0.5*wres
