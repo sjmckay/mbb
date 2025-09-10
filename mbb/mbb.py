@@ -480,7 +480,7 @@ class ModifiedBlackbody:
         """
         Convenience function to return this ModifiedBlackbody's fitting parameters (so N instead of L) as a dictionary
         """
-        return {'N':self.N,'T':self.T,'beta':self.beta,'z':self.z}
+        return {'N':self.N,'T':self.T,'beta':self.beta,'z':self.z, 'alpha':self.alpha, 'l0':self.l0}
     
     def _get_model_spread(self, lam, nsamples=200):
         """
