@@ -25,6 +25,7 @@ cosmo = FlatLambdaCDM(H0=70.0, Om0=0.30)
 
 from functools import partial
 
+import multiprocessing as mp
 from multiprocessing import Pool, cpu_count
 
 NCORES = cpu_count()-2
@@ -129,7 +130,7 @@ class ModifiedBlackbody:
         else:
             raise ValueError(f"'new_cosmo' must be of type astropy.cosmology.Cosmology, got {type(new_cosmo)}")
 
-    def fit(self, phot, nwalkers=400, niter=2000, ncores = NCORES, stepsize=1e-7,params=['L','beta','T'],priors=None,restframe=False):
+    def fit(self, phot, nwalkers=400, niter=2000, ncores = NCORES, stepsize=1e-7,params=['L','beta','T'],priors=None,restframe=False,pool=None):
         """Fit photometry
 
         Fit a modified blackbody to photometry.
@@ -147,6 +148,7 @@ class ModifiedBlackbody:
             Wavelengths should be given as rest-frame values.
             nwalkers (int): how many walkers should be used in the MCMC fit. 
             niter (int): how many iterations to run in the fit.
+            ncores (int): how many CPU cores to use in multiprocessing. Pass 1 to not use multiprocessing. Default is number of available CPUs - 2.
             stepsize (float): stepsize used to randomize the initial walker values. 
             params (list): list of parameter names, e.g., [``L``, ``beta``, ``T``, ``z``, ``alpha``, ``l0``] to vary in the fit. The rest will be fixed. \
                 ``L`` should generally be included since it represents the normalization of the model. 
@@ -156,11 +158,14 @@ class ModifiedBlackbody:
                 generate a Gaussian prior on that parameter. If ``None``, or for any params not included in ``priors``, flat (uniform) priors will be assumed. \
                 Currently, ``T`` is constrained to be between 5 K and 120 K, ``beta`` is between 0.1 and 5.0, and ``z`` is between 0.1 and 12.
             restframe (bool): whether wavelengths in ``phot`` are given in the rest frame (default is observed frame)
+            pool (multiprocessing.pool.Pool): an optional pool to pass to the sampler for multiprocessing; otherwise fit() will generate one internally. \
+                Can be faster to use an external Pool if many fits are being performed, also may be useful depending on the OS/kernel being used.
         """
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
         if restframe: self._phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
         else: self._phot = (phot[0]/(1.0+self.z),phot[1],phot[2])
         self._priors = priors
+
         # replace L with N (under the hood, we use N to normalize the model)
         if 'L' in params: 
             i = params.index('L')
@@ -172,21 +177,25 @@ class ModifiedBlackbody:
         except KeyError:
             raise ValueError(f'Varied parameters must be one of {list(initdict.keys())}')
         ndim=len(init)
+
         #set up initial parameters
         fixed = initdict.copy()
         for key in params: fixed.pop(key)
         self._to_vary = params
         p0 = [np.array(init) + stepsize * np.random.randn(ndim) for i in range(nwalkers)]
+
         #run the MCMC fit
         sampler = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, ncores=ncores, lnprob=self._lnprob, 
-            ndim=ndim, to_vary = params, fixed = fixed)#, data = self._phot)
+            ndim=ndim, to_vary = params, fixed = fixed, pool=pool)
         self._fit_result = {'sampler':sampler}
+
         #get 16,50,84 percentiles of fitted parameters and update
         med_params = self._get_params_spread()
         updated = initdict
         for i, key in enumerate(params):
             updated[key] = med_params[1][i]
         self._update_N(**updated)
+
         #save chi2 and fitted parameter results in easy to access format
         yprime = self.eval(self._phot[0],z=0).value
         self._fit_result['chi2'] = np.nansum( (self._phot[1]-yprime)**2/self._phot[2]**2 )
@@ -448,7 +457,7 @@ class ModifiedBlackbody:
         dustmass = Snu * DL**2 / kappa_B_T / (1.+self.z)
         return dustmass.to(u.Msun)
 
-    def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCORES,to_vary=['N','beta','T'], fixed=None):
+    def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCORES,to_vary=['N','beta','T'], fixed=None,pool=None):
         """
         Function to handle the actual MCMC fitting routine of this ModifiedBlackbody's internal model.
 
@@ -459,13 +468,21 @@ class ModifiedBlackbody:
             ndim: dimensionality (usally len(p0))
             lnprob: function used to determine logarithmic probability
             ncores: number of CPU cores to use
-
+            to_vary: parameter names to vary in fit.
+            fixed: dictionary of fixed parameters (keys=names, values=values)
+            pool: optional multiprocessing.pool.Pool to pass to EnsembleSampler
         Returns:
             Dictionary with keys ``sampler``,``pos``,``prob``, and ``state``, which encode the results of the fit.
             ``sampler`` is the actual chain of parameter values from the MCMC run. 
             ``pos``, ``prob``, and ``state`` are the output of the ``run_mcmc`` function from the ``emcee.EnsembleSampler <https://emcee.readthedocs.io/en/stable/user/sampler/>``_
         """
-        with Pool(ncores) as pool:
+        close_pool = False
+        if ncores > 1 and pool is None:
+            pool = mp.get_context("spawn").Pool(processes=ncores)
+            close_pool = True
+        elif ncores <= 1:
+            pool = None
+        try:
             sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool, parameter_names=to_vary, kwargs=fixed)
             print("Running burn-in...")
             p0, _, _ = sampler.run_mcmc(p0, NBURN,progress=True)
@@ -473,6 +490,10 @@ class ModifiedBlackbody:
             print("Running fitter...")
             state = sampler.run_mcmc(p0, niter,progress=True)
             print("Done\n")
+        finally:
+            if close_pool and pool is not None:
+                pool.close()
+                pool.join()
         return sampler
     
 
@@ -537,7 +558,6 @@ class ModifiedBlackbody:
             return -np.inf
         return lnlike
     
-
 
     def _lnprior(self, params):
         if 'T' in params.keys():
