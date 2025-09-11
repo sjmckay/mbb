@@ -147,7 +147,8 @@ class ModifiedBlackbody:
         Example:
 
         .. code-block:: python
-            
+        
+           from mbb import ModifiedBlackbody as MBB
            m = MBB(L=12, beta=1.8, T=35, z=2.5, alpha=2.0, opthin=True, pl = True)
            phot = ([450, 850],[0.005, 0.0021],[0.0006,0.00032]) #wl, flux, error
            
