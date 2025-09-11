@@ -150,9 +150,13 @@ class ModifiedBlackbody:
             
            m = MBB(L=12, beta=1.8, T=35, z=2.5, alpha=2.0, opthin=True, pl = True)
            phot = ([450, 850],[0.005, 0.0021],[0.0006,0.00032]) #wl, flux, error
-           result = m.fit(phot=phot,niter=100,params=['L','z'],restframe=False,priors = {'z':dict(mu=2.5,sigma=1.0)}) # fit for redshift
+           
+           # fit for redshift
+           result = m.fit(phot=phot,niter=100,params=['L','z'],
+                          restframe=False, priors = {'z':dict(mu=2.5,sigma=1.0)}) 
            # could equivalently use 'm.fit_result' instead of 'result'
-           reduc_chi2 = result['chi2']/(result['n_bands]-result['n_params']) # reduced chi-squared
+
+           reduc_chi2 = result['chi2']/(result['n_bands']-result['n_params']) # reduced chi-squared
 
         Args:
             phot (array-like): wavelengths and photometry, arranged as a 3 x N array (wavelength, flux, error). 
