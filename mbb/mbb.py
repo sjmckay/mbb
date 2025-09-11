@@ -138,10 +138,20 @@ class ModifiedBlackbody:
         attribute of the ModifiedBlackbody with the fit results.
 
         The ``fit_result`` attribute is a dictionary containing the following:
-            - ``sampler``: an ``emcee.EnsembleSampler`` represnting the chain of walker values from the fit.
+            - ``sampler``: an ``emcee.EnsembleSampler`` representing the chain of walker values from the fit.
             - ``chi2``: the raw chi-squared value at the end of the fitting process.
             - ``n_params``: the number of fitted parameters.
             - ``n_bands``: the number of bands in the fit (the length of ``phot``)
+
+        Example:
+
+        .. code-block:: python
+            
+           m = MBB(L=12, beta=1.8, T=35, z=2.5, alpha=2.0, opthin=True, pl = True)
+           phot = ([450, 850],[0.005, 0.0021],[0.0006,0.00032]) #wl, flux, error
+           result = m.fit(phot=phot,niter=100,params=['L','z'],restframe=False,priors = {'z':dict(mu=2.5,sigma=1.0)}) # fit for redshift
+           # could equivalently use 'm.fit_result' instead of 'result'
+           reduc_chi2 = result['chi2']/(result['n_bands]-result['n_params']) # reduced chi-squared
 
         Args:
             phot (array-like): wavelengths and photometry, arranged as a 3 x N array (wavelength, flux, error). 
