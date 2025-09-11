@@ -158,7 +158,7 @@ class ModifiedBlackbody:
             Wavelengths should be given as rest-frame values.
             nwalkers (int): how many walkers should be used in the MCMC fit. 
             niter (int): how many iterations to run in the fit.
-            ncores (int): how many CPU cores to use in multiprocessing. If ``pool`` is not None, this is ignored. Set to 1 to not use multiprocessing. \
+            ncores (int): how many CPU cores to use in multiprocessing. If ``pool`` is not ``None``, this is ignored. Set to 1 to not use multiprocessing. \
                 Default is number of available CPUs - 2.
             stepsize (float): stepsize used to randomize the initial walker values. 
             params (list): list of parameter names, e.g., [``L``, ``beta``, ``T``, ``z``, ``alpha``, ``l0``] to vary in the fit. The rest will be fixed. \
