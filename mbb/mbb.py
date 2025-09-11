@@ -63,8 +63,9 @@ class ModifiedBlackbody:
         opthin (bool): Whether or not the model should assume optically thin dust emission.
         pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
 
-    Note: By default, ModifiedBlackbody assumes a flat :math:`\Lambda` CDM cosmology with :math:`\Omega_m = 0.3` and :math:`\Omega_\Lambda = 0.7`. If you wish to change this, \
-        the code allows you to set the ``cosmo`` attribute of the ModifiedBlackbody to an instance of ``astropy.cosmology.Cosmology`` after it is created. 
+    Note: By default, ModifiedBlackbody assumes a flat :math:`\Lambda` CDM cosmology with :math:`\Omega_m = 0.3` and :math:`\Omega_\Lambda = 0.7`.\
+         If you wish to change this, the code allows you to set the ``cosmo`` attribute of the ModifiedBlackbody to an instance of \
+         ``astropy.cosmology.Cosmology`` after it is created. 
     """
 
     def __init__(self, L, T, beta, z, alpha=2.0,l0=200.,opthin=True, pl=False):
@@ -130,7 +131,7 @@ class ModifiedBlackbody:
         else:
             raise ValueError(f"'new_cosmo' must be of type astropy.cosmology.Cosmology, got {type(new_cosmo)}")
 
-    def fit(self, phot, nwalkers=400, niter=2000, ncores = NCORES, stepsize=1e-7,params=['L','beta','T'],priors=None,restframe=False,pool=None):
+    def fit(self, phot, nwalkers=400, niter=500, ncores = NCORES, stepsize=1e-7,params=['L','beta','T'],priors=None,restframe=False,pool=None):
         """Fit photometry
 
         Fit a modified blackbody to photometry.
