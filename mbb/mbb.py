@@ -342,7 +342,7 @@ class ModifiedBlackbody:
         if self.fit_result != None:
             nsamples = 200
             y, lb,ub = self._get_model_spread(x)
-        else: y = self.eval(x)
+        else: y = self.eval(x ,z=0)
         if obs_frame == True:
             x *= (1.+self.z)
             ax.set(xlabel = r'$\lambda$ observed-frame [$\mu$m]', ylabel = 'Flux [mJy]')

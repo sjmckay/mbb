@@ -20,9 +20,12 @@ A quick plot of this model can be made, if desired:
 .. code-block:: python
 
     import matplotlib.pyplot as plt
-    
+
     fig, ax = m.plot_sed(obs_frame=True)
     plt.show()
+
+.. image:: ex_plt_1.png
+   :width: 350px
 
 Fitting photometric data
 ------------------------
@@ -38,9 +41,31 @@ Most often, you want to fit a given model to photometric data points. ``mbb`` al
         )
     m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], restframe=False)
 
+.. code-block:: bash
+
+    Running burn-in...
+    100%|█████████████████████████████████████████| 300/300 [00:07<00:00, 38.87it/s]
+    Running fitter...
+    100%|█████████████████████████████████████████| 500/500 [00:12<00:00, 41.62it/s]
+    Done 
+
 You specify which parameters to fit using the ``params`` keyword argument; the options are ``L``, ``T``, ``beta``, ``alpha``, ``l0``, or ``z`` (the latter if you want to use ``mbb`` as a far-infrared photometric redshift code).
 
 The parameters passed to initialize the ``ModifiedBlackbody`` are passed to ``emcee`` as the starting parameters of the fit.
+
+View the resulting model after the fit, with uncertainties:
+
+.. code-block:: python
+
+    fig, ax = m.plot_sed(obs_frame=True)
+    plt.show()
+
+
+.. image:: ex_plt_2.png
+   :width: 350px
+
+Modeling priors
+---------------
 
 By default, uniform priors are assumed on all the fit parameters, but you can change this by passing a dictionary, ``priors``, to ``fit``. 
 Each key of ``priors`` should be the name of a parameter, and each value is either:
