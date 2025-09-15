@@ -135,8 +135,10 @@ class ModifiedBlackbody:
         """Fit photometry
 
         Fit a modified blackbody to photometry.
-        Updates the parameters of this MBB model to the best-fit parameters of the fit, and populates the ``fit_result``
-        attribute of the ModifiedBlackbody with the fit results.
+        Updates the parameters of this MBB model to the resulting parameters of the fit, and populates the ``fit_result`` attribute \
+            of the ModifiedBlackbody with the fit results. Note that the final values of the MBB model will be set to \
+            the converged (maximum likelihood) value from the fit, but depending on the posterior distribution, you may prefer \
+            to use the median of the posterior as the final values for the parameters; this can be obtained with the ``post_percentile()`` method.
 
         The ``fit_result`` attribute is a dictionary containing the following:
             - ``sampler``: an ``emcee.EnsembleSampler`` representing the chain of walker values from the fit.
@@ -232,13 +234,13 @@ class ModifiedBlackbody:
         self._priors = None
 
 
-    def _get_chain_for_parameter(self, param,skip=1):
+    def _get_chain_for_parameter(self, param,sample_by=1):
         '''retrieve the chain of walker values for a given parameter that was varied in the fit'''
         if self.fit_result != None:
             if param == 'L' and 'N' in self._to_vary: 
                 params = self._fit_param_dict()
                 lirs = []
-                chain = self.fit_result['sampler'].get_chain(flat=True)[::skip,:]            
+                chain = self.fit_result['sampler'].get_chain(flat=True)[::sample_by,:]            
                 for i in range(len(chain)):
                     p = params.copy()
                     for j, key in enumerate(self._to_vary): p[key] = chain[i][j]
@@ -253,7 +255,7 @@ class ModifiedBlackbody:
         return None
     
 
-    def post_percentile(self,param,q=[16,50,84]):
+    def post_percentile(self,param,q=[16,50,84],sample_by=1):
         '''Determine the posterior percentile values of a given fit parameter.
 
         Example: 
@@ -265,13 +267,14 @@ class ModifiedBlackbody:
         Args:
             param (str): name of parameter, element of the 'params' argument passed to ModifiedBlackbody.fit()
             q (array-like of float): percentile or sequence of percentiles to compute from the posterior distribution
+            sample_by (int): sample every ``sample_by`` values in the posterior chain, helps with speed (especially for ``L``, which must be computed).
             
         Returns:
             float or array: the percentiles of the posterior distribution for parameter 'param'
         '''
         if self.fit_result != None:
             try:
-                chain = self._get_chain_for_parameter(param)
+                chain = self._get_chain_for_parameter(param,sample_by=sample_by)
                 return np.nanpercentile(chain, q=q)
             except Exception as e:
                 raise Exception(f"Unable to get posterior for parameter {param}: failed with error '{e}'")
@@ -301,7 +304,7 @@ class ModifiedBlackbody:
         self._update_N(T=T, beta=beta,z=z,alpha=alpha,l0=l0)
         if L: #update N and L consistently
             Lcurr = np.log10(self.get_luminosity((8,1000)).value)
-            while((Lcurr > (L+0.001)) | (Lcurr < (L-0.001))):
+            while((Lcurr > (L+0.0001)) | (Lcurr < (L-0.0001))):
                 self.N = self.N * (L/Lcurr)
                 Lcurr = np.log10(self.get_luminosity((8,1000)).value)
             self.L = np.round(Lcurr,2)
@@ -382,7 +385,7 @@ class ModifiedBlackbody:
         data = self.fit_result['sampler'].get_chain(flat=True)[::10,:]
         labels = {'T':r'$T$','beta':r'$\beta$','N':r'$L_{\rm IR}$','z':r'$z$','alpha':r'$\alpha$','l0':r'$\lambda_0$'}
         if 'N' in self._to_vary:
-            lirs = self._get_chain_for_parameter('L',skip=10)
+            lirs = self._get_chain_for_parameter('L',sample_by=10)
             lirs = lirs.reshape(len(lirs),1)
             whereN = np.where(np.array(self._to_vary) == 'N')[0]
             data[:,whereN] = lirs
@@ -421,6 +424,15 @@ class ModifiedBlackbody:
         return self._model(wl/(1+z),N=N,beta=beta,T=T, z=z,alpha=alpha,l0=l0)*u.Jy
 
 
+    def get_peak_wavelength(self):
+        '''Get the peak (rest-frame) wavelength of this ModifiedBlackbody, in microns.'''
+        x = np.logspace(1,3,5000)
+        y = self.eval(x,z=0)
+        peak = np.nanargmax(y)
+        peak_wl = x[peak] * u.micron
+        return peak_wl
+
+
     def get_luminosity(self, wllimits=(8,1000)):
         """get integrated luminosity for the current MBB state between wavelength limits
          in microns.
@@ -435,15 +447,6 @@ class ModifiedBlackbody:
         return self._integrate_mbb(**self._fit_param_dict(), wllimits=wllimits)
 
 
-    def get_peak_wavelength(self):
-        '''Get the peak (rest-frame) wavelength of this ModifiedBlackbody, in microns.'''
-        x = np.logspace(1,3,5000)
-        y = self.eval(x,z=0)
-        peak = np.nanargmax(y)
-        peak_wl = x[peak] * u.micron
-        return peak_wl
-
-
     def _integrate_mbb(self,N,T,beta,z=0,alpha=2,l0=200,wllimits=(8,1000)):
         """
         integrate a model with given N, beta, T between wllimits in rest-frame. See docs for get_luminosity,
@@ -454,13 +457,15 @@ class ModifiedBlackbody:
         if len(wllimits) == 2 and wllimits[0] < wllimits[1]:
             nulow = (con.c/(wllimits[1]*u.um)).to(u.Hz)
             nuhigh = (con.c/(wllimits[0]*u.um)).to(u.Hz)
-            nu = np.linspace(nulow, nuhigh, 20000)
+            nu = np.logspace(np.log10(nulow.value), np.log10(nuhigh.value), 1000) * u.Hz
             dnu = nu[1:] - nu[0:-1]
             DL = self._cosmo.luminosity_distance(z)
             lam = nu.to(u.um, equivalencies=u.spectral()).value  
             lum = np.sum(4*np.pi*DL**2 * self._eval_mbb(lam[:-1],N,T,beta, alpha=alpha,l0=l0) * dnu)/(1+z)
             return lum.to(u.Lsun)
+        else: raise ValueError(f"wllimits must be in the form (l_low, l_high) with l_low < l_high, received {wllimits}")
     
+
     def _compute_dust_mass(self,):
         '''
         Compute dust mass for this ModifiedBlackbody.
@@ -473,6 +478,7 @@ class ModifiedBlackbody:
         Snu = self.eval(l0,z=0).value
         dustmass = Snu * DL**2 / kappa_B_T / (1.+self.z)
         return dustmass.to(u.Msun)
+
 
     def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCORES,to_vary=['N','beta','T'], fixed=None,pool=None):
         """
@@ -519,6 +525,7 @@ class ModifiedBlackbody:
         """
         return {'N':self.N,'T':self.T,'beta':self.beta,'z':self.z, 'alpha':self.alpha, 'l0':self.l0}
     
+
     def _get_model_spread(self, lam, nsamples=200):
         """
         Function to get the median, 16th, and 84th percentile of the ModifedBlackbody spectrum (posterior)
@@ -545,12 +552,14 @@ class ModifiedBlackbody:
         lb,med_model,ub = np.nanpercentile(models,[16,50,84],axis=0)
         return med_model, lb, ub
 
+
     def _get_params_spread(self):
         """Get the median, 16th, and 84th percentile of all the fit parameters.
         """
         params = self.fit_result['sampler'].get_chain(flat=True)
         params_res = np.nanpercentile(params,[16,50,84],axis=0)
         return params_res
+
 
     def _select_model(self):
         """
@@ -559,6 +568,7 @@ class ModifiedBlackbody:
         Previously this function returned entirely different functions, now it does this effectively using functools.partial.
         """
         return partial(mbb_func, opthin=self.opthin, pl=self.pl)
+
 
     def _lnlike(self, params, **kwargs):
         x = self._phot[0]
@@ -604,6 +614,7 @@ class ModifiedBlackbody:
                 if not np.isnan(val) and val <= 0.0: lnpriors += val
         return lnpriors
 
+
     def _lnprob(self, params, **kwargs):
         lp = self._lnprior(params)
         if not np.isfinite(lp):
@@ -615,6 +626,7 @@ class ModifiedBlackbody:
         """write out full MBB including fit and sampler (not yet implmented)"""
         raise NotImplementedError()
     
+
     @classmethod
     def restore_from_file(self,filepath):
         """read in full MBB including fit and sampler (not yet implemented)"""
