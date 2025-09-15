@@ -10,7 +10,7 @@ mbb
 
 Feel free to suggest updates/point out issues on the `GitHub page <https://github.com/mckay-sjm/mbb>`_. These docs are a work in progress.
 
-Author: Stephen McKay, 2023
+Author: Stephen McKay
 
 .. image:: mbb_1.png
    :width: 350px

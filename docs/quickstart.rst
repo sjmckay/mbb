@@ -20,6 +20,7 @@ A quick plot of this model can be made, if desired:
 .. code-block:: python
 
     import matplotlib.pyplot as plt
+    
     fig, ax = m.plot_sed(obs_frame=True)
     plt.show()
 
@@ -37,19 +38,20 @@ Most often, you want to fit a given model to photometric data points. ``mbb`` al
         )
     m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], restframe=False)
 
-You specify which parameters to fit using the ``params`` keyword argument; the options are ``L``, ``T``, ``beta``, ``alpha``, ``l0``, or ``z`` (the latter) if you want to use ``mbb`` as a far-infrared photometric redshift code.
+You specify which parameters to fit using the ``params`` keyword argument; the options are ``L``, ``T``, ``beta``, ``alpha``, ``l0``, or ``z`` (the latter if you want to use ``mbb`` as a far-infrared photometric redshift code).
 
 The parameters passed to initialize the ``ModifiedBlackbody`` are passed to ``emcee`` as the starting parameters of the fit.
 
 By default, uniform priors are assumed on all the fit parameters, but you can change this by passing a dictionary, ``priors``, to ``fit``. 
-Each key of ``priors`` should be the name of a parameter, and each value is either 
+Each key of ``priors`` should be the name of a parameter, and each value is either:
 
-    1. a dictionary with keywords ``mu`` and ``sigma``, to specify Gaussian priors
-    2. your own function, which takes the parameter as an argument and returns a number between 0.0 and 1.0.
+1. a dictionary with keywords ``mu`` and ``sigma``, to specify Gaussian priors
+2. your own function, which takes the parameter as an argument and returns a number between 0.0 and 1.0.
 
 .. code-block:: python
 
-    m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], restframe=False, priors = {'beta':dict(mu=1.8,sigma=0.3))
+    m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], 
+        restframe=False, priors = {'beta':dict(mu=1.8,sigma=0.3))
 
 Working with the fit results
 ----------------------------
