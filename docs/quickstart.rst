@@ -64,6 +64,17 @@ View the resulting model after the fit, with uncertainties:
 .. image:: ex_plt_2.png
    :width: 350px
 
+You can also make a simple corner plot of the parameters that were varied:
+
+.. code-block:: python
+
+    fig = m.plot_corner()
+    plt.show()
+
+The basic plotting routines are fairly sparse, but most plot aspects can be modified, or you can write your own functions to produce higher quality / publication-ready figures.
+
+
+
 Modeling priors
 ---------------
 
