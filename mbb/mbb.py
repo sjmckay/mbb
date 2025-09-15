@@ -281,18 +281,19 @@ class ModifiedBlackbody:
         else: raise AttributeError(f'No fit has been run yet, so no posterior for {param} exists.')
 
 
-    def posterior(self,param):
+    def posterior(self,param,sample_by=1):
         '''Determine the posterior chain of a given fit parameter.
 
         Args:
             param (str): name of parameter, element of the 'params' argument passed to ModifiedBlackbody.fit()
+            sample_by (int): sample every ``sample_by`` values in the posterior chain, helps with speed (especially for ``L``, which must be computed).
             
         Returns:
             array: the chain of values in the posterior distribution for parameter 'param'
         '''
         if self.fit_result != None:
             try:
-                chain = self._get_chain_for_parameter(param)
+                chain = self._get_chain_for_parameter(param,sample_by=sample_by)
                 return chain
             except Exception as e:
                 raise Exception(f"Unable to get posterior for parameter {param}: failed with error '{e}'")
