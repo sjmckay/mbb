@@ -37,6 +37,18 @@ Documentation
    mbb.rst
    mbb_funcs.rst
 
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   
+   quickstart.rst
+   mbb.rst
+   mbb_funcs.rst
+
+
 .. Indices and tables
 .. ------------------
 .. * :ref:`genindex`
