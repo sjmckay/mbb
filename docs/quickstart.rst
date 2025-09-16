@@ -97,18 +97,45 @@ Each key of ``priors`` should be the name of a parameter, and each value is eith
 
 
 Accessing the fit results
-----------------------------
+-------------------------
 
 To access the percentiles of the posterior distribition for any parameter in the fit:
 
 .. code-block:: python
+
     print(m.post_percentile('beta', q=(16,50,84))) #16th, 50th, 84th percentiles
 
+.. code-block:: python
     
 
-Currently, the measurement for ``L`` require integration under the hood, so they can take a long time
+To get the reduced chi-squared value from the fit_result:
 
-The full ``emcee.EnsembleSampler`` is stored as the ``sampler`` element of the ``fit_result`` attribute. This can be used to generate any kind of analysis one would typically be able to produce with ``emcee``, including looking at the autocorrelation time and other fit statistics, if desired.
+.. code-block:: python
+    
+    reduc_chi2 = m.fit_result['chi2'] / (m.fit_result['n_bands']-m.fit_result['n_params'])
+	print(chi2)
+
+.. code-block:: python
+    
+    print(m.post_percentile('beta', q=(16,50,84))) #16th, 50th, 84th percentiles
+
+
+Currently, the measurement for ``L`` requires integration under the hood, so it can take a long time. The same applies for generating the corner plots. I'm working on speeding this process up.
+
+The full ``emcee.EnsembleSampler`` is stored as the ``sampler`` element of the ``fit_result`` attribute. This can be used to perform any kind of analysis one would typically want with ``emcee``, such as looking at the autocorrelation time and other fit statistics, if desired.
+
+
+To reset the ``fit_result`` and clear the priors, use ``reset()``. The parameters of the MBB will still be set to the best values from the previous fit, however.
+
+.. code-block:: python
+    
+    m.reset()
+    print(np.round(m.beta,2))
+
+
+.. code-block:: python
+    
+    1.95
 
 
 Multiprocessing
