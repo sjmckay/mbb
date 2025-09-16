@@ -27,7 +27,7 @@ Here we have chosen an optically thin model with no mid-infrared power law. A qu
 .. image:: images/ex_plt_1a.png
    :width: 350px
 
-Alternatively, we could choose, say, a general opacity model with the power law included:
+Alternatively, we could choose, say, a general opacity model with the power law included (default power-law slope ``alpha=2.0`` and turnover wavelength ``l0=200`` microns):
 
 .. code-block:: python
 
@@ -166,6 +166,7 @@ The ModifiedBlackbody class also includes a few helper functions and attributes 
 
 
 Flux at a given wavelength:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
     
@@ -188,6 +189,7 @@ Flux at a given wavelength:
     18.869 mJy
 
 Infrared luminosity:
+^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
     
@@ -204,6 +206,7 @@ Infrared luminosity:
 
 
 Dust mass:
+^^^^^^^^^^
 
 .. code-block:: python
     
@@ -214,7 +217,8 @@ Dust mass:
     
     8.801244720863213
 
-Peak wavelength of the dust emission (rest frame)
+Peak wavelength of the dust emission (rest frame):
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
     
