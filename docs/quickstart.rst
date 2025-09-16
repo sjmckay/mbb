@@ -93,7 +93,13 @@ Each key of ``priors`` should be the name of a parameter, and each value is eith
     result = m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], 
         restframe=False, priors = {'beta':dict(mu=1.8,sigma=0.3)})
 
+.. code-block:: python
 
+    Running burn-in...
+    100%|█████████████████████████████████████████| 300/300 [00:07<00:00, 38.87it/s]
+    Running fitter...
+    100%|█████████████████████████████████████████| 500/500 [00:12<00:00, 41.62it/s]
+    Done 
 
 
 Accessing the fit results
@@ -107,6 +113,7 @@ To access the percentiles of the posterior distribition for any parameter in the
 
 .. code-block:: python
     
+    [1.56834795 1.83519843 2.10055382]
 
 To get the reduced chi-squared value from the fit_result:
 
@@ -117,7 +124,7 @@ To get the reduced chi-squared value from the fit_result:
 
 .. code-block:: python
     
-    print(m.post_percentile('beta', q=(16,50,84))) #16th, 50th, 84th percentiles
+    0.8697752576488373
 
 
 Currently, the measurement for ``L`` requires integration under the hood, so it can take a long time. The same applies for generating the corner plots. I'm working on speeding this process up.
@@ -135,7 +142,7 @@ To reset the ``fit_result`` and clear the priors, use ``reset()``. The parameter
 
 .. code-block:: python
     
-    1.95
+    1.84
 
 
 Multiprocessing
