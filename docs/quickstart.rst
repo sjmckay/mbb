@@ -15,7 +15,7 @@ The first step is usually to create a MBB model by filling in the necessary init
 
     m = MBB(L=12.5, T=35, beta=1.8, z=2.65, opthin=True, pl=False)
 
-A quick plot of this model can be made, if desired:
+Here we have chosen an optically thin model with no mid-infrared power law. A quick plot of this model can be made, if desired:
 
 .. code-block:: python
 
@@ -24,8 +24,20 @@ A quick plot of this model can be made, if desired:
     fig, ax = m.plot_sed(obs_frame=True)
     plt.show()
 
-.. image:: images/ex_plt_1.png
+.. image:: images/ex_plt_1a.png
    :width: 350px
+
+Alternatively, we could choose, say, a general opacity model with the power law included:
+
+.. code-block:: python
+
+    m2 = MBB(L=12.5, T=35, beta=1.8, z=2.65, opthin=False, pl=True)
+    fig, ax = m2.plot_sed(obs_frame=True)
+    plt.show()
+
+.. image:: images/ex_plt_1b.png
+   :width: 350px
+
 
 Fitting photometric data
 ------------------------
