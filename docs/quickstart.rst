@@ -64,7 +64,7 @@ Most often, you want to fit a given model to photometric data points. ``mbb`` al
 
 You specify which parameters to fit using the ``params`` keyword argument; the options are ``L``, ``T``, ``beta``, ``alpha``, ``l0``, or ``z`` (the latter if you want to use ``mbb`` as a far-infrared photometric redshift code).
 
-The parameters passed to initialize the ``ModifiedBlackbody`` are passed to ``emcee`` as the starting parameters of the fit.
+The parameter values used to initialize the ``ModifiedBlackbody`` are also used by ``emcee`` as the starting parameters of the fit.
 
 View the resulting model after the fit, with uncertainties:
 
