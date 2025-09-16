@@ -143,10 +143,10 @@ To get the reduced chi-squared value from the fit_result:
 
 Currently, the measurement for ``L`` requires integration under the hood, so it can take a long time. The same applies for generating the corner plots. I'm working on speeding this process up.
 
-The full ``emcee.EnsembleSampler`` is stored as the ``sampler`` element of the ``fit_result`` attribute. This can be used to perform any kind of analysis one would typically want with ``emcee``, such as looking at the autocorrelation time and other fit statistics, if desired.
+The full ``emcee.EnsembleSampler`` is stored as the ``sampler`` element of the ``fit_result`` dictionary. This can be used to perform any kind of analysis one would typically want with ``emcee``, such as looking at the autocorrelation time and other fit statistics, if desired.
 
 
-To reset the ``fit_result`` and clear the priors, use ``reset()``. The parameters of the MBB will still be set to the best values from the previous fit, however.
+To clear the ``fit_result`` and priors, use ``reset()``. Note that the parameters of the MBB will still be set to the best values from the previous fit:
 
 .. code-block:: python
     
