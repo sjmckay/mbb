@@ -1,6 +1,6 @@
 # mbb
 
-**mbb** is a basic implementation of a modified blackbody (MBB) model, commonly used for fitting the spectral energy distributions of dusty star-forming galaxies (DSFGs) as well as a wide array of other astrophysical phenomena.
+**mbb** is a basic implementation of a modified blackbody (MBB) model, commonly used for fitting the spectral energy distributions (SEDs) of dusty star-forming galaxies (DSFGs) as well as other astrophysical phenomena.
 
 Feel free to suggest updates/point out issues on the [GitHub page](https://github.com/mckay-sjm/mbb_model).
 
@@ -11,8 +11,9 @@ Author: Stephen McKay, 2023
 
 The simplest way to install `mbb` is with `pip`; e.g., `pip install mbb`.
 
-## Examples and Documentation
+## Usage
 
-Basic documentation [here.](https://mbb-model.readthedocs.io/en/latest/)
+**mbb** can be used to generate mock SEDs based on a range of dust emission parameters, or it can be used to fit dust emission models to observed photometry and extract the best-fit parameters. The code is fully Bayesian, built on the [`emcee`](https://emcee.readthedocs.io/en/stable/) package.
 
-More examples coming soon!
+
+Documentation and examples available [here.](https://mbb-model.readthedocs.io/en/latest/)
