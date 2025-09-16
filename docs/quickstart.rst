@@ -93,7 +93,17 @@ Each key of ``priors`` should be the name of a parameter, and each value is eith
     result = m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], 
         restframe=False, priors = {'beta':dict(mu=1.8,sigma=0.3))
 
-Working with the fit results
+
+Accessing the fit results
 ----------------------------
 
-More coming soon!
+To access the percentiles of the posterior distribition for any parameter in the fit:
+
+.. code-block:: python
+    print(m.post_percentile('beta', q=(16,50,84))) #16th, 50th, 84th percentiles
+
+    
+
+Currently, the measurement for ``L`` require integration under the hood, so they can take a long time
+
+The full ``emcee.EnsembleSampler`` is stored as the ``sampler`` element of the ``fit_result`` attribute. This can be used to generate any kind of analysis one would typically be able to produce with ``emcee``, including looking at the autocorrelation time and other fit statistics, if desired.
