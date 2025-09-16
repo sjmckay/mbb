@@ -145,6 +145,68 @@ To reset the ``fit_result`` and clear the priors, use ``reset()``. The parameter
     1.84
 
 
+Other utility functions
+-----------------------
+
+The ModifiedBlackbody class also includes a few helper functions and attributes to compute useful quantities, such as fluxes, luminosities, and dust masses:
+
+
+Flux at a given wavelength:
+
+.. code-block:: python
+    
+    m.eval(1200) #wl in microns, observed frame by default
+
+
+.. code-block:: python
+    
+    1.84
+
+.. code-block:: python
+    
+    m.eval(100, z=0) #rest frame
+
+
+.. code-block:: python
+    
+    1.84
+
+Infrared luminosity:
+
+.. code-block:: python
+    
+    m.get_luminosity(wllimits=(8,1000)) #roughly same as m.L
+
+
+.. code-block:: python
+    
+    1.84
+
+
+Dust mass:
+
+.. code-block:: python
+    
+    np.log10(m.dust_mass)
+
+
+.. code-block:: python
+    
+    1.84
+
+Peak wavelength of the dust emission (rest frame)
+
+.. code-block:: python
+    
+    m.get_peak_wavelength()
+
+
+.. code-block:: python
+    
+    1.84
+
+
+
 Multiprocessing
 ---------------
 
