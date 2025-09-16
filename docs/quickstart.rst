@@ -93,7 +93,7 @@ Each key of ``priors`` should be the name of a parameter, and each value is eith
     result = m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], 
         restframe=False, priors = {'beta':dict(mu=1.8,sigma=0.3)})
 
-.. code-block:: python
+.. code-block:: bash
 
     Running burn-in...
     100%|█████████████████████████████████████████| 300/300 [00:07<00:00, 38.87it/s]
@@ -111,7 +111,7 @@ To access the percentiles of the posterior distribition for any parameter in the
 
     print(m.post_percentile('beta', q=(16,50,84))) #16th, 50th, 84th percentiles
 
-.. code-block:: python
+.. code-block:: bash
     
     [1.56834795 1.83519843 2.10055382]
 
@@ -122,7 +122,7 @@ To get the reduced chi-squared value from the fit_result:
     reduc_chi2 = m.fit_result['chi2'] / (m.fit_result['n_bands']-m.fit_result['n_params'])
 	print(chi2)
 
-.. code-block:: python
+.. code-block:: bash
     
     0.8697752576488373
 
@@ -140,7 +140,7 @@ To reset the ``fit_result`` and clear the priors, use ``reset()``. The parameter
     print(np.round(m.beta,2))
 
 
-.. code-block:: python
+.. code-block:: bash
     
     1.84
 
@@ -158,18 +158,20 @@ Flux at a given wavelength:
     m.eval(1200) #wl in microns, observed frame by default
 
 
-.. code-block:: python
+.. code-block:: bash
     
-    1.84
+    0.002494547015269406 Jy
 
 .. code-block:: python
     
-    m.eval(100, z=0) #rest frame
+    import astropy.units as u
+
+    m.eval(100, z=0).to(u.mJy) #rest frame
 
 
-.. code-block:: python
+.. code-block:: bash
     
-    1.84
+    18.834276700728424 mJy
 
 Infrared luminosity:
 
@@ -178,19 +180,19 @@ Infrared luminosity:
     m.get_luminosity(wllimits=(8,1000)) #roughly same as m.L
 
 
-.. code-block:: python
+.. code-block:: bash
     
-    1.84
+    2595627754216.6904 solLum
 
 
 Dust mass:
 
 .. code-block:: python
     
-    np.log10(m.dust_mass)
+    np.log10(m.dust_mass.value)
 
 
-.. code-block:: python
+.. code-block:: bash
     
     1.84
 
@@ -201,7 +203,7 @@ Peak wavelength of the dust emission (rest frame)
     m.get_peak_wavelength()
 
 
-.. code-block:: python
+.. code-block:: bash
     
     1.84
 

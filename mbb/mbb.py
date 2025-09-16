@@ -181,6 +181,7 @@ class ModifiedBlackbody:
             pool (multiprocessing.pool.Pool): an optional pool to pass to the sampler for multiprocessing; otherwise fit() will generate one internally. \
                 Can be faster to use an external Pool if many fits are being performed, also may be useful depending on the OS/kernel being used.
         """
+        self.reset() #flush any previous fit
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
         if restframe: self._phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
         else: self._phot = (phot[0]/(1.0+self.z),phot[1],phot[2])
