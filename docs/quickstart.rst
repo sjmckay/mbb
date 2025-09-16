@@ -65,6 +65,7 @@ View the resulting model after the fit, with uncertainties:
 .. image:: images/ex_plt_2.png
    :width: 350px
 
+
 You can also make a simple corner plot of the parameters that were varied:
 
 .. code-block:: python
@@ -74,6 +75,7 @@ You can also make a simple corner plot of the parameters that were varied:
 
 .. image:: images/ex_plt_3.png
    :width: 350px
+
 
 The basic plotting routines are fairly sparse, but most plot aspects can be modified, or you can write your own functions to produce higher quality / publication-ready figures.
 
@@ -111,7 +113,7 @@ To access the percentiles of the posterior distribition for any parameter in the
 
     print(m.post_percentile('beta', q=(16,50,84))) #16th, 50th, 84th percentiles
 
-.. code-block::
+.. code-block:: python
     
     [1.56834795 1.83519843 2.10055382]
 
@@ -120,9 +122,9 @@ To get the reduced chi-squared value from the fit_result:
 .. code-block:: python
     
     reduc_chi2 = m.fit_result['chi2'] / (m.fit_result['n_bands']-m.fit_result['n_params'])
-	print(chi2)
+    print(chi2)
 
-.. code-block::
+.. code-block:: python
     
     0.8697752576488373
 
@@ -140,7 +142,7 @@ To reset the ``fit_result`` and clear the priors, use ``reset()``. The parameter
     print(np.round(m.beta,2))
 
 
-.. code-block::
+.. code-block:: python
     
     1.84
 
@@ -158,7 +160,7 @@ Flux at a given wavelength:
     m.eval(1200) #wl in microns, observed frame by default
 
 
-.. code-block::
+.. code-block:: python
     
     0.002494547015269406 Jy
 
@@ -169,7 +171,7 @@ Flux at a given wavelength:
     np.round(m.eval(100, z=0).to(u.mJy), 3) #rest frame
 
 
-.. code-block::
+.. code-block:: python
     
     18.869 mJy
 
@@ -196,7 +198,7 @@ Dust mass:
     np.log10(m.dust_mass.value) #solMass
 
 
-.. code-block::
+.. code-block:: python
     
     8.801244720863213
 
@@ -207,7 +209,7 @@ Peak wavelength of the dust emission (rest frame)
     m.get_peak_wavelength()
 
 
-.. code-block::
+.. code-block:: python
     
     106.51370243412198 micron
 
