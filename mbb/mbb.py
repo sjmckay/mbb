@@ -11,6 +11,8 @@ import numpy as np
 import emcee
 import corner
 
+import sys
+
 import warnings
 
 from copy import deepcopy
@@ -136,9 +138,8 @@ class ModifiedBlackbody:
 
         Fit a modified blackbody to photometry.
         Updates the parameters of this MBB model to the resulting parameters of the fit, and populates the ``fit_result`` attribute \
-            of the ModifiedBlackbody with the fit results. Note that the final values of the MBB model will be set to \
-            the converged (maximum likelihood) value from the fit, but depending on the posterior distribution, you may prefer \
-            to use the median of the posterior as the final values for the parameters; this can be obtained with the ``post_percentile()`` method.
+            of the ModifiedBlackbody with the fit results. The parameter values of the MBB model will be set to the medians of the posterior distributions. \
+            Percentiles of the posterior (e.g., to measure the 68% confidence interval) can be obtained with the ``post_percentile()`` method.
 
         The ``fit_result`` attribute is a dictionary containing the following:
             - ``sampler``: an ``emcee.EnsembleSampler`` representing the chain of walker values from the fit.
@@ -255,7 +256,7 @@ class ModifiedBlackbody:
         return None
     
 
-    def post_percentile(self,param,q=[16,50,84],sample_by=1):
+    def post_percentile(self,param,q=[16,50,84],sample_by=10):
         '''Determine the posterior percentile values of a given fit parameter.
 
         Example: 
@@ -281,7 +282,7 @@ class ModifiedBlackbody:
         else: raise AttributeError(f'No fit has been run yet, so no posterior for {param} exists.')
 
 
-    def posterior(self,param,sample_by=1):
+    def posterior(self,param,sample_by=10):
         '''Determine the posterior chain of a given fit parameter.
 
         Args:
@@ -503,7 +504,11 @@ class ModifiedBlackbody:
         close_pool = False
         if pool is None:
             if ncores > 1:
-                pool = mp.get_context("spawn").Pool(processes=ncores)
+                if sys.platform == "win32":
+                    ctx = mp.get_context("spawn")
+                else:
+                    ctx = mp.get_context("fork")
+                pool = ctx.Pool(processes=ncores)
                 close_pool = True
         try:
             sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool, parameter_names=to_vary, kwargs=fixed)
@@ -554,10 +559,10 @@ class ModifiedBlackbody:
         return med_model, lb, ub
 
 
-    def _get_params_spread(self):
-        """Get the median, 16th, and 84th percentile of all the fit parameters.
+    def _get_params_spread(self,sample_by=10):
+        """Get the median, 16th, and 84th percentile of all the fit parameters. Similar to _get_chain_for_parameter() and post_posterior(), but simpler and faster.
         """
-        params = self.fit_result['sampler'].get_chain(flat=True)
+        params = self.fit_result['sampler'].get_chain(flat=True)[::sample_by,:]
         params_res = np.nanpercentile(params,[16,50,84],axis=0)
         return params_res
 

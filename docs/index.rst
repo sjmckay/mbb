@@ -12,10 +12,10 @@ Feel free to suggest updates/point out issues on the `GitHub page <https://githu
 
 Author: Stephen McKay
 
-.. image:: mbb_1.png
+.. image:: images/mbb_1.png
    :width: 350px
 
-.. image:: corner_1.png
+.. image:: images/corner_1.png
    :width: 300px
 
 Installation

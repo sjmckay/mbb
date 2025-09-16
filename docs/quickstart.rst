@@ -24,7 +24,7 @@ A quick plot of this model can be made, if desired:
     fig, ax = m.plot_sed(obs_frame=True)
     plt.show()
 
-.. image:: ex_plt_1.png
+.. image:: images/ex_plt_1.png
    :width: 350px
 
 Fitting photometric data
@@ -62,7 +62,7 @@ View the resulting model after the fit, with uncertainties:
     plt.show()
 
 
-.. image:: ex_plt_2.png
+.. image:: images/ex_plt_2.png
    :width: 350px
 
 You can also make a simple corner plot of the parameters that were varied:
@@ -72,7 +72,7 @@ You can also make a simple corner plot of the parameters that were varied:
     fig = m.plot_corner()
     plt.show()
 
-.. image:: ex_plt_3.png
+.. image:: images/ex_plt_3.png
    :width: 350px
 
 The basic plotting routines are fairly sparse, but most plot aspects can be modified, or you can write your own functions to produce higher quality / publication-ready figures.
@@ -91,7 +91,9 @@ Each key of ``priors`` should be the name of a parameter, and each value is eith
 .. code-block:: python
 
     result = m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], 
-        restframe=False, priors = {'beta':dict(mu=1.8,sigma=0.3))
+        restframe=False, priors = {'beta':dict(mu=1.8,sigma=0.3)})
+
+
 
 
 Accessing the fit results
@@ -107,3 +109,11 @@ To access the percentiles of the posterior distribition for any parameter in the
 Currently, the measurement for ``L`` require integration under the hood, so they can take a long time
 
 The full ``emcee.EnsembleSampler`` is stored as the ``sampler`` element of the ``fit_result`` attribute. This can be used to generate any kind of analysis one would typically be able to produce with ``emcee``, including looking at the autocorrelation time and other fit statistics, if desired.
+
+
+Multiprocessing
+---------------
+
+By default, ``mbb`` will try to use the number of available CPUs minus 2 to run the fit. To control this, you can either pass an integer to the ``ncores`` argument of ``fit`` (pass 1 to not use multiprocessing at all), or you can generate your own process Pool object (e.g., ``multiprocessing.pool.Pool``) and pass it as the ``pool`` argument.
+
+Note: to avoid multiprocessing errors, the process start method is set to "fork" on Linux/macOS and to "spawn" on Windows. If you run into errors, I recommend passing in your own Pool object or forgoing multiprocessing.
