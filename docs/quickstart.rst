@@ -36,10 +36,10 @@ Most often, you want to fit a given model to photometric data points. ``mbb`` al
 
     phot = (
         [250, 350, 450, 850, 1200], # wavelength in microns
-        [0.012, 0.019, 0.0146, 0.00883, 0.0023], # flux in Jy
+        [0.012, 0.019, 0.0166, 0.00683, 0.0023], # flux in Jy
         [0.0044, 0.0064, 0.0036, 0.00057, 0.0003]  # error in Jy
         )
-    m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], restframe=False)
+    result = m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], restframe=False)
 
 .. code-block:: bash
 
@@ -48,6 +48,7 @@ Most often, you want to fit a given model to photometric data points. ``mbb`` al
     Running fitter...
     100%|█████████████████████████████████████████| 500/500 [00:12<00:00, 41.62it/s]
     Done 
+
 
 You specify which parameters to fit using the ``params`` keyword argument; the options are ``L``, ``T``, ``beta``, ``alpha``, ``l0``, or ``z`` (the latter if you want to use ``mbb`` as a far-infrared photometric redshift code).
 
@@ -71,6 +72,9 @@ You can also make a simple corner plot of the parameters that were varied:
     fig = m.plot_corner()
     plt.show()
 
+.. image:: ex_plt_3.png
+   :width: 350px
+
 The basic plotting routines are fairly sparse, but most plot aspects can be modified, or you can write your own functions to produce higher quality / publication-ready figures.
 
 
@@ -86,7 +90,7 @@ Each key of ``priors`` should be the name of a parameter, and each value is eith
 
 .. code-block:: python
 
-    m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], 
+    result = m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], 
         restframe=False, priors = {'beta':dict(mu=1.8,sigma=0.3))
 
 Working with the fit results
