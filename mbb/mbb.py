@@ -49,7 +49,7 @@ LHI = 1000
 from .mbb_funcs import mbb_func, planckbb #mbb_fun_ot, mbb_fun_go, mbb_fun_go_pl, mbb_fun_ot_pl
 
 class ModifiedBlackbody:
-    """Class to represent a modified blackbody (or MBB).
+    r"""Class to represent a modified blackbody (or MBB).
     
     This class can be used to encapsulate a single MBB model, or to perform an SED fit to photometry. The results can be easily plotted \
         or updated as needed, and various parameters/statistics can be extracted. The models are based off of \
