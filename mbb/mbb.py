@@ -60,7 +60,7 @@ class ModifiedBlackbody:
         beta (float): dust emissivity spectral index. If fitting data, this will set the initial guess for the fit.
         z (float): Redshift of this galaxy.
         alpha (float, optional): mid-IR power-law slope.
-        l0 (float,optional): opacity turnover wavelength in microns.
+        l0 (float,optional): wavelength where opacity equals unity, in microns.
         opthin (bool): Whether or not the model should assume optically thin dust emission.
         pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
 
