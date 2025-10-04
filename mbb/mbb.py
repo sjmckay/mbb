@@ -72,7 +72,7 @@ class ModifiedBlackbody:
          ``astropy.cosmology.Cosmology`` after it is created. 
     """
 
-    def __init__(self, L, T, beta, z, alpha=2.0,l0=200., opthin=True, pl=False, pl_turnover_scale = 1.0, ):
+    def __init__(self, L, T, beta, z, alpha=2.0,l0=200., opthin=True, pl=False, pl_turnover_scale = 0.75, ):
         self.L = L
         self.T = T 
         self.beta = beta 
@@ -80,7 +80,7 @@ class ModifiedBlackbody:
         self._cosmo = cosmo
         self._pl = pl
         self._opthin=opthin
-        self._pl_turnover_scale = 1.0
+        self._pl_turnover_scale = pl_turnover_scale
         self.alpha=alpha
         self.l0=l0
         self._model = self._select_model()
