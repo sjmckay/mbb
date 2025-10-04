@@ -33,15 +33,15 @@ def go_mbb(l, Nbb, beta, T, z,l0=200):
                 * 10.0**Nbb * 2*h / c**2 * ((1.0 - np.exp(-(l0/l)**beta))*(c/(l*1.e-6))**3.0)/(np.exp(h*c/(l*1.e-6*k_B*T))-1.0)
     return result
 
-def ot_pl(l, Nbb, beta, T, alpha,l0=200, pl_turnover_scale = 0.75):
-    l_c = pl_turnover_scale*(T*(alpha*7.243e-5 + 1.905e-4))**(-1)
+def ot_pl(l, Nbb, beta, T, alpha,l0=200, l_c=None, pl_turnover_scale = 0.75):
+    if l_c is None: l_c = pl_turnover_scale*(T*(alpha*7.243e-5 + 1.905e-4))**-1.0 # approx l_c
     Npl = 10.0**Nbb *(l0*1e-6/c)**beta * 2*h / c**2 * (c/(l_c*1e-6))**(beta+3)\
             /(np.exp(h*c/(l_c*1e-6*k_B*T))-1.0)/((l_c*1e-6)**alpha)
     result = Npl*(l*1e-6)**alpha * np.exp(-(l/l_c)**2)
     return result
 
-def go_pl(l, Nbb, beta, T, alpha, l0=200, pl_turnover_scale = 0.75):
-    l_c = pl_turnover_scale*(T*(alpha*7.243e-5 + 1.905e-4)+ (alpha*6.246 + 26.68)**(-2))**(-1)
+def go_pl(l, Nbb, beta, T, alpha, l0=200, l_c = None, pl_turnover_scale = 0.75):
+    if l_c is None: l_c = pl_turnover_scale*(T*(alpha*7.243e-5 + 1.905e-4)+ (alpha*6.246 + 26.68)**-2.0)**-1.0 #approx l_c
     Npl = 10.0**Nbb * 2*h / c**2 * ((1.0 - np.exp(-(l0/l_c)**beta)) * (c/(l_c*1e-6))**3)\
             /(np.exp(h*c/(l_c*1e-6*k_B*T))-1.0)/((l_c*1e-6)**alpha)
     result = Npl * (l*1e-6)**alpha * np.exp(-(l/l_c)**2)
@@ -65,8 +65,19 @@ def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False,
         float: the value(s) of the model in Jy at wavelengths ``l``, in microns
     """
     if pl:
-        if opthin: return ot_mbb(l, N,beta,T,z,l0=l0) + ot_pl(l,N,beta,T,alpha,l0=l0, pl_turnover_scale=pl_turnover_scale) 
-        else: return go_mbb(l, N,beta,T,z,l0=l0) + go_pl(l,N,beta,T,alpha,l0=l0, pl_turnover_scale=pl_turnover_scale) 
+        if opthin: 
+            ## todo: calc l_c exactly, not approx
+            l_c = pl_turnover_scale*(T*(alpha*7.243e-5 + 1.905e-4))**-1.0
+            return ot_mbb(l, N,beta,T,z,l0=l0) + ot_pl(l,N,beta,T,alpha,l0=l0, l_c=l_c) 
+        else: 
+            l_c = pl_turnover_scale*(T*(alpha*7.243e-5 + 1.905e-4)+ (alpha*6.246 + 26.68)**-2.0)**-1.0
+            # x = np.linspace(1,200,1000)
+            # y = go_mbb(x, N,beta,T,z,l0=l0)
+            # grad_mbb = np.log10(y[1:]-y[:-1])/np.log10(x[1:]-x[:-1]) # thhis is currently wrong
+            # l_c = pl_turnover_scale*x[np.argmin(grad_mbb-alpha)]
+            l = np.array(l)
+            # return np.concatenate([go_pl(l[l<l_c],N,beta,T,alpha,l0=l0, l_c=l_c), go_mbb(l[l>=l_c], N,beta,T,z,l0=l0)])
+            return go_mbb(l, N,beta,T,z,l0=l0) + go_pl(l,N,beta,T,alpha,l0=l0, l_c=l_c)
     else:
         if opthin: return ot_mbb(l, N,beta,T,z,l0=l0) 
         else: return go_mbb(l, N,beta,T,z,l0=l0) 
