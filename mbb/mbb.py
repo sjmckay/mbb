@@ -63,13 +63,16 @@ class ModifiedBlackbody:
         l0 (float,optional): wavelength where opacity equals unity, in microns.
         opthin (bool): Whether or not the model should assume optically thin dust emission.
         pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
+        pl_turnover_scale (float): If a power law is included, this is the factor by which the turnover 
+            wavelength (wavelength where alpha == blackbody gradient) is scaled (set to 0.75 to match Casey+ 2012, 
+            but 1.0 in various other papers to match alpha to blackbody gradient slope)
 
     Note: By default, ModifiedBlackbody assumes a flat :math:`\\Lambda\\mathrm{CDM}` cosmology with :math:`\\Omega_m = 0.3` and :math:`\\Omega_\\Lambda = 0.7`.\
          If you wish to change this, the code allows you to set the ``cosmo`` attribute of the ModifiedBlackbody to an instance of \
          ``astropy.cosmology.Cosmology`` after it is created. 
     """
 
-    def __init__(self, L, T, beta, z, alpha=2.0,l0=200.,opthin=True, pl=False):
+    def __init__(self, L, T, beta, z, alpha=2.0,l0=200., opthin=True, pl=False, pl_turnover_scale = 1.0, ):
         self.L = L
         self.T = T 
         self.beta = beta 
@@ -77,6 +80,7 @@ class ModifiedBlackbody:
         self._cosmo = cosmo
         self._pl = pl
         self._opthin=opthin
+        self._pl_turnover_scale = 1.0
         self.alpha=alpha
         self.l0=l0
         self._model = self._select_model()
@@ -573,7 +577,7 @@ class ModifiedBlackbody:
         based on the ModifiedBlackbody initialization arguments pl = True/False and opthin = True/False.
         Previously this function returned entirely different functions, now it does this effectively using functools.partial.
         """
-        return partial(mbb_func, opthin=self.opthin, pl=self.pl)
+        return partial(mbb_func, opthin=self.opthin, pl=self.pl, pl_turnover_scale=self._pl_turnover_scale)
 
 
     def _lnlike(self, params, **kwargs):
