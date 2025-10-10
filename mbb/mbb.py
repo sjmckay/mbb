@@ -63,9 +63,8 @@ class ModifiedBlackbody:
         l0 (float,optional): wavelength where opacity equals unity, in microns.
         opthin (bool): Whether or not the model should assume optically thin dust emission.
         pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
-        pl_turnover_scale (float): If a power law is included, this is the factor by which the turnover 
-            wavelength (wavelength where alpha == blackbody gradient) is scaled (set to 0.75 to match Casey+ 2012, 
-            but 1.0 in various other papers to match alpha to blackbody gradient slope)
+        pl_piecewise (bool): if the powerlaw should be attached piecewise (as in Casey+2021) or smoothly blended (as in Casey+ 2012). 
+            If piecewise, this joins the powerlaw exactly where the blackbody slope equals alpha, otherwise it turns over at 3/4 times this wavelength.
 
     Note: By default, ModifiedBlackbody assumes a flat :math:`\\Lambda\\mathrm{CDM}` cosmology with :math:`\\Omega_m = 0.3` and :math:`\\Omega_\\Lambda = 0.7`.\
          If you wish to change this, the code allows you to set the ``cosmo`` attribute of the ModifiedBlackbody to an instance of \
