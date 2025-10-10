@@ -35,20 +35,20 @@ def go_mbb(l, Nbb, beta, T, z,l0=200):
 
 def ot_pl(l, Nbb, beta, T, alpha,l0=200, pl_piecewise = False):
     if not pl_piecewise: l_c = 0.75*(T*(alpha*7.243e-5 + 1.905e-4))**-1.0 # approx l_c
-    else: pass
+    else: pass #todo: sort out turnover wavelength if piecewise
     Npl = 10.0**Nbb *(l0*1e-6/c)**beta * 2*h / c**2 * (c/(l_c*1e-6))**(beta+3)\
             /(np.exp(h*c/(l_c*1e-6*k_B*T))-1.0)/((l_c*1e-6)**alpha)
     result = Npl*(l*1e-6)**alpha
-    if not pl_piecewise: result *= np.exp(-(l/l_c)**2)
+    if not pl_piecewise: result *= np.exp(-(l/l_c)**2) #smooth fall off above l_c if not piecewise
     return result
 
 def go_pl(l, Nbb, beta, T, alpha, l0=200, l_c = None, pl_piecewise = False):
     if not pl_piecewise: l_c = 0.75*(T*(alpha*7.243e-5 + 1.905e-4)+ (alpha*6.246 + 26.68)**-2.0)**-1.0 #approx l_c
-    else: pass
+    else: pass #todo: sort out turnover wavelength if piecewise
     Npl = 10.0**Nbb * 2*h / c**2 * ((1.0 - np.exp(-(l0/l_c)**beta)) * (c/(l_c*1e-6))**3)\
             /(np.exp(h*c/(l_c*1e-6*k_B*T))-1.0)/((l_c*1e-6)**alpha)
     result = Npl * (l*1e-6)**alpha
-    if not pl_piecewise: result *= np.exp(-(l/l_c)**2)
+    if not pl_piecewise: result *= np.exp(-(l/l_c)**2) #smooth fall off above l_c if not piecewise
     return result
 
 
@@ -71,10 +71,12 @@ def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False,
     """
     if pl:
         if opthin: 
+            #todo: sort out turnover wavelength
             mbb_y = ot_mbb(l, N,beta,T,z,l0=l0)
             pl_y = ot_pl(l,N,beta,T,alpha,l0=l0, pl_piecewise=pl_piecewise) 
             return mbb_y + pl_y
         else: 
+            # todo: sort out turnover wavelength
             mbb_y = go_mbb(l, N,beta,T,z,l0=l0)
             pl_y = go_pl(l,N,beta,T,alpha,l0=l0, pl_piecewise=pl_piecewise)
             return mbb_y + pl_y
