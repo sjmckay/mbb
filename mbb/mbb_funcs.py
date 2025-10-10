@@ -73,7 +73,7 @@ def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False,
     Returns:
         float: the value(s) of the model in Jy at wavelengths ``l``, in microns
     """
-    l = np.array([l])
+    l = np.array(l,)
     if pl:
         # todo: add flexibility so piecewise is independent of scale
         # todo: sort out turnover wavelength
