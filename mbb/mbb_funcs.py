@@ -48,7 +48,7 @@ def go_pl(l, Nbb, beta, T, alpha, l0=200, l_c = None, pl_turnover_scale = 0.75):
     return result
 
 
-def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False, pl_turnover_scale=0.75):
+def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False, pl_piecewise=False):
     """ MBB function with optional powerlaw and variable opacity assumptions
 
     Args:

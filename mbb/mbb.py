@@ -72,7 +72,7 @@ class ModifiedBlackbody:
          ``astropy.cosmology.Cosmology`` after it is created. 
     """
 
-    def __init__(self, L, T, beta, z, alpha=2.0,l0=200., opthin=True, pl=False, pl_turnover_scale = 0.75, ):
+    def __init__(self, L, T, beta, z, alpha=2.0,l0=200., opthin=True, pl=False, pl_piecewise = False):
         self.L = L
         self.T = T 
         self.beta = beta 
@@ -80,7 +80,7 @@ class ModifiedBlackbody:
         self._cosmo = cosmo
         self._pl = pl
         self._opthin=opthin
-        self._pl_turnover_scale = pl_turnover_scale
+        self._pl_piecewise = pl_piecewise
         self.alpha=alpha
         self.l0=l0
         self._model = self._select_model()
@@ -577,7 +577,7 @@ class ModifiedBlackbody:
         based on the ModifiedBlackbody initialization arguments pl = True/False and opthin = True/False.
         Previously this function returned entirely different functions, now it does this effectively using functools.partial.
         """
-        return partial(mbb_func, opthin=self.opthin, pl=self.pl, pl_turnover_scale=self._pl_turnover_scale)
+        return partial(mbb_func, opthin=self.opthin, pl=self.pl, pl_piecewise=self._pl_piecewise)
 
 
     def _lnlike(self, params, **kwargs):
