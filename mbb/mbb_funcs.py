@@ -51,7 +51,7 @@ def go_pl(l, Nbb, beta, T, alpha, l0=200, l_c = None):
 
 def approx_l_c(alpha, T, opthin=False, scale=1.0):
     if opthin: return scale*(T*(alpha*7.243e-5 + 1.905e-4))**-1.0
-    else: return scale*(T*(alpha*7.243e-5 + 1.905e-4)+ (alpha*6.246 + 26.68)**-2.0)**-1.0
+    return scale*(T*(alpha*7.243e-5 + 1.905e-4)+ (alpha*6.246 + 26.68)**-2.0)**-1.0
 
 def exact_l_c():
     pass

@@ -342,7 +342,7 @@ class ModifiedBlackbody:
         """
         if ax is None: fig, ax = plt.subplots(figsize=(5,4),dpi=120) 
         else: fig = ax.get_figure()
-        x = np.logspace(1,4,500)
+        x = np.logspace(1,4,5000)
         if self.fit_result != None:
             nsamples = 200
             y, lb,ub = self._get_model_spread(x)
