@@ -63,7 +63,7 @@ class ModifiedBlackbody:
         l0 (float,optional): wavelength where opacity equals unity, in microns.
         opthin (bool): Whether or not the model should assume optically thin dust emission.
         pl (pool): Whether or not the model should include a MIR power law (as in Casey+ 2012)
-        pl_piecewise (bool): if the powerlaw should be attached piecewise (as in Casey+2021) or smoothly blended (as in Casey+ 2012). 
+        pl_piecewise (bool): if the powerlaw should be attached piecewise (as in Drew&Casey 2022) or with exponential fall-off (as in Casey+ 2012). 
             Currently, if set to ``True``, the powerlaw is joined at the wavelength where the blackbody slope equals alpha, otherwise it smoothly turns over at 3/4 times this wavelength.
 
     Note: By default, ModifiedBlackbody assumes a flat :math:`\\Lambda\\mathrm{CDM}` cosmology with :math:`\\Omega_m = 0.3` and :math:`\\Omega_\\Lambda = 0.7`.\
