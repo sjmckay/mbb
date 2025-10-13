@@ -67,7 +67,7 @@ def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False,
         l0 (float): turnover wavelength at which dust is optically thin
         opthin (bool): Whether or not the model should assume optically thin dust emission.
         pl (bool): Whether or not the model should include a MIR power law 
-        pl_piecewise (bool): if the powerlaw should be attached piecewise (as in Casey+2021) or fall off exponentially (as in Casey+ 2012)
+        pl_piecewise (bool): if the powerlaw should be attached piecewise (as in Drew&Casey 2022) or fall off exponentially (as in Casey+ 2012)
 
     Returns:
         float: the value(s) of the model in Jy at wavelengths ``l``, in microns
