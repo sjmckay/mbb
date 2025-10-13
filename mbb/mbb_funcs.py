@@ -53,8 +53,17 @@ def approx_l_c(alpha, T, opthin=False, scale=1.0):
     if opthin: return scale*(T*(alpha*7.243e-5 + 1.905e-4))**-1.0
     return scale*(T*(alpha*7.243e-5 + 1.905e-4)+ (alpha*6.246 + 26.68)**-2.0)**-1.0
 
-def exact_l_c():
-    pass
+def exact_l_c(N, beta, T, z, alpha, l0, opthin=False, scale=1.0):
+    l=np.logspace(1,3,1001)
+    if opthin: y = ot_mbb(l, N,beta,T,z,l0=l0)
+    else: y = go_mbb(l, N,beta,T,z,l0=l0)
+    dy = np.log10(y[1:]/y[:-1])
+    dx = np.log10(l[1:]/l[:-1])
+    slope=dy/dx
+    i_join = np.argmin(slope-alpha) # match alpha to slope
+    l_c = scale*l[i_join]
+    return l_c
+
 
 def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False, pl_piecewise=False):
     """ MBB function with optional powerlaw and variable opacity assumptions
@@ -70,15 +79,17 @@ def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False,
         opthin (bool): Whether or not the model should assume optically thin dust emission.
         pl (bool): Whether or not the model should include a MIR power law 
         pl_piecewise (bool): if the powerlaw should be attached piecewise (as in Casey+2021) or fall off exponentially (as in Casey+ 2012)
+        
     Returns:
         float: the value(s) of the model in Jy at wavelengths ``l``, in microns
     """
     l = np.array(l,)
     if pl:
         # todo: add flexibility so piecewise is independent of scale
-        # todo: sort out turnover wavelength
-        if pl_piecewise: l_c = approx_l_c(alpha, T, opthin=opthin, scale=1.0)
-        else: l_c = approx_l_c(alpha, T, opthin=opthin, scale=0.75)
+        scale=0.75
+        if pl_piecewise: scale=1.0
+
+        l_c = exact_l_c(N, beta, T, z, alpha, l0=l0, opthin=opthin, scale=scale)#approx_l_c(alpha, T, opthin=opthin, scale=1.0)
         if opthin: 
             mbb_y = ot_mbb(l, N,beta,T,z,l0=l0)
             pl_y = ot_pl(l,N,beta,T,alpha,l0=l0, l_c=l_c) 
