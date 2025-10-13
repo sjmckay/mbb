@@ -18,34 +18,38 @@ Tcmb0 = 2.75
 
 # note in all cases, lambda (l) is in microns and rest frame. These functions return model values in Janskys 
 
-def ot_mbb(l, Nbb, beta, T, z,l0=200):
+def _ot_mbb(l, Nbb, beta, T, z,l0=200):
+    """Optically thin modified blackbody function"""
     Tcmbz = Tcmb0*(1+z)
     Tz = (T**(4+beta)  +  (Tcmb0)**(4+beta) * ((1+z)**(4+beta)-1) ) **(1/(4+beta))
-    result = (1 - (planckbb(l,Tcmbz)/planckbb(l,Tz))) * (Tz/T)**(4+beta) \
+    result = (1 - (_planckbb(l,Tcmbz)/_planckbb(l,Tz))) * (Tz/T)**(4+beta) \
             * 10.0**Nbb *(l0*1e-6/c)**beta * 2*h / c**2 * (c/(l*1.e-6))**(beta+3)/(np.exp(h*c/(l*1e-6*k_B*T))-1)
     return result
 
-def go_mbb(l, Nbb, beta, T, z,l0=200):
+def _go_mbb(l, Nbb, beta, T, z,l0=200):
+    """General opacity modified blackbody function"""
     Tcmbz = Tcmb0*(1+z)
     Tz = (T**(4+beta)  +  (Tcmb0)**(4+beta) * ((1+z)**(4+beta)-1) ) **(1/(4+beta))
     ### general opacity version
-    result = (1 - (planckbb(l,Tcmbz)/planckbb(l,Tz))) * (Tz/T)**(4+beta) \
+    result = (1 - (_planckbb(l,Tcmbz)/_planckbb(l,Tz))) * (Tz/T)**(4+beta) \
                 * 10.0**Nbb * 2*h / c**2 * ((1.0 - np.exp(-(l0/l)**beta))*(c/(l*1.e-6))**3.0)/(np.exp(h*c/(l*1.e-6*k_B*T))-1.0)
     return result
 
-def powerlaw(l, Npl, alpha, l_c):
+def _powerlaw(l, Npl, alpha, l_c):
     """MIR power-law. Note that here, unlike Casey+2012, the normalization Npl does not implicitly include the factor l_c^alpha. 
     Instead, it is just the value of the MBB at l_c."""
     return Npl*(l/l_c)**alpha
 
-def approx_l_c(alpha, T, opthin=False, scale=1.0):
+def _approx_l_c(alpha, T, opthin=False, scale=1.0):
+    """Approximate turnover wavelength as defined in Casey 2012"""
     if opthin: return scale*(T*(alpha*7.243e-5 + 1.905e-4))**-1.0
     return scale*(T*(alpha*7.243e-5 + 1.905e-4)+ (alpha*6.246 + 26.68)**-2.0)**-1.0
 
-def exact_l_c(N, beta, T, z, alpha, l0, opthin=False, scale=1.0):
+def _exact_l_c(N, beta, T, z, alpha, l0, opthin=False, scale=1.0):
+    """Direct turnover wavelength as measured from mbb gradient"""
     l=np.logspace(1,3,1001)
-    if opthin: y = ot_mbb(l, N,beta,T,z,l0=l0)
-    else: y = go_mbb(l, N,beta,T,z,l0=l0)
+    if opthin: y = _ot_mbb(l, N,beta,T,z,l0=l0)
+    else: y = _go_mbb(l, N,beta,T,z,l0=l0)
     dy = np.log10(y[1:]/y[:-1])
     dx = np.log10(l[1:]/l[:-1])
     slope=dy/dx
@@ -55,7 +59,7 @@ def exact_l_c(N, beta, T, z, alpha, l0, opthin=False, scale=1.0):
 
 
 def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False, pl_piecewise=False):
-    """ MBB function with optional powerlaw and variable opacity assumptions
+    """MBB function with optional powerlaw and variable opacity assumptions
 
     Args:
         l (float): the rest-frame wavelengths, in microns, at which to evaluate the model.
@@ -78,16 +82,16 @@ def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False,
         scale=0.75
         if pl_piecewise: scale=1.0
 
-        l_c = exact_l_c(N, beta, T, z, alpha, l0=l0, opthin=opthin, scale=scale)
-        # l_c = approx_l_c(alpha, T, opthin=opthin, scale=scale)
+        l_c = _exact_l_c(N, beta, T, z, alpha, l0=l0, opthin=opthin, scale=scale)
+        # l_c = _approx_l_c(alpha, T, opthin=opthin, scale=scale)
         if opthin: 
-            norm = ot_mbb(l_c, N,beta,T,z,l0=l0)
-            mbb_y = ot_mbb(l, N,beta,T,z,l0=l0)
-            pl_y = powerlaw(l, norm, alpha, l_c=l_c) 
+            norm = _ot_mbb(l_c, N,beta,T,z,l0=l0)
+            mbb_y = _ot_mbb(l, N,beta,T,z,l0=l0)
+            pl_y = _powerlaw(l, norm, alpha, l_c=l_c) 
         else: 
-            norm = go_mbb(l_c, N,beta,T,z,l0=l0)
-            mbb_y = go_mbb(l, N,beta,T,z,l0=l0)
-            pl_y = powerlaw(l, norm, alpha,l_c=l_c) 
+            norm = _go_mbb(l_c, N,beta,T,z,l0=l0)
+            mbb_y = _go_mbb(l, N,beta,T,z,l0=l0)
+            pl_y = _powerlaw(l, norm, alpha,l_c=l_c) 
         if pl_piecewise: 
             mbb_y[l<l_c] = 0
             pl_y[l>=l_c] = 0
@@ -95,9 +99,9 @@ def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False,
             pl_y *= np.exp(-(l/l_c)**2) #smooth fall off above l_c if not piecewise
         return mbb_y + pl_y
     else:
-        if opthin: return ot_mbb(l, N,beta,T,z,l0=l0) 
-        else: return go_mbb(l, N,beta,T,z,l0=l0) 
+        if opthin: return _ot_mbb(l, N,beta,T,z,l0=l0) 
+        else: return _go_mbb(l, N,beta,T,z,l0=l0) 
 
 
-def planckbb(l,T): # note although this requires wavlength in micron, it represents B_nu
+def _planckbb(l,T): # note although this requires wavlength in micron, it represents B_nu
     return 2*h / c**2 * (c/(l*1e-6))**3 / (np.exp(h*c/(l*1e-6*k_B*T))-1)

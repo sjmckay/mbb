@@ -39,7 +39,7 @@ Alternatively, we could choose, say, a general opacity model with the power law 
    :width: 350px
 
 
-The above model follows `Casey et al. (2012) <https://doi.org/10.1111/j.1365-2966.2012.21455.x>`_, where the power law is joined at 3/4 the wavelength where the slope equals ``alpha``. 
+The above model follows `Casey (2012) <https://doi.org/10.1111/j.1365-2966.2012.21455.x>`_, where the power law is joined at 3/4 the wavelength where the slope equals ``alpha``. 
 If you prefer a piecewise power law connected where the slope of the blackbody matches ``alpha``, set ``pl_piecewise`` to ``True``:
 
 .. code-block:: python
