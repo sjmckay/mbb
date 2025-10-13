@@ -7,34 +7,34 @@ if __name__ == "__main__":
     freeze_support()
     
     m1 = MBB(z=2.5,L=12.6,T=35,beta=2.0,pl=True,opthin=False)
-    # print('before fit')
-    # print('850um flux', m1.eval(850,z=m1.z).value*1000,'mJy')
-    # print(f'log10 dust mass: {np.log10(m1.dust_mass.value):.2f}')
-    # print(f'peak wl: {m1.get_peak_wavelength():.2f}')
+    print('before fit')
+    print('850um flux', m1.eval(850,z=m1.z).value*1000,'mJy')
+    print(f'log10 dust mass: {np.log10(m1.dust_mass.value):.2f}')
+    print(f'peak wl: {m1.get_peak_wavelength():.2f}')
 
 
-    # m1.fit(phot=([450, 850],[0.005, 0.0021],[0.0006,0.00032]),niter=10,params=['L','beta'],restframe=False)
-    # print('after fit:')
-    # print('850um flux', m1.eval(850,z=m1.z).value*1000,'mJy')
-    # print('beta', m1.beta)
+    m1.fit(phot=([450, 850],[0.005, 0.0021],[0.0006,0.00032]),niter=10,params=['L','beta'],restframe=False)
+    print('after fit:')
+    print('850um flux', m1.eval(850,z=m1.z).value*1000,'mJy')
+    print('beta', m1.beta)
 
-    # try:
-    #     print(m1.posterior('beta')[::2])
-    #     print(m1.beta)
-    # except Exception as e:
-    #     print(f'Caught exception {e}')
+    try:
+        print(m1.posterior('beta')[::2])
+        print(m1.beta)
+    except Exception as e:
+        print(f'Caught exception {e}')
 
-    # m1.plot_corner()
-    # plt.show()
-    # print('existing cosmo:',m1.cosmo)
+    m1.plot_corner()
+    plt.show()
+    print('existing cosmo:',m1.cosmo)
 
-    # print(f'log10 dust mass: {np.log10(m1.dust_mass.value):.6f}')
-    # from astropy.cosmology import Planck18 as nc
-    # m1.cosmo = nc
-    # print('set new cosmo!')
-    # print('new cosmo:',m1.cosmo)
+    print(f'log10 dust mass: {np.log10(m1.dust_mass.value):.6f}')
+    from astropy.cosmology import Planck18 as nc
+    m1.cosmo = nc
+    print('set new cosmo!')
+    print('new cosmo:',m1.cosmo)
   
-    # print(f'log10 dust mass: {np.log10(m1.dust_mass.value):.6f}')
+    print(f'log10 dust mass: {np.log10(m1.dust_mass.value):.6f}')
 
 
     print('*'*50)

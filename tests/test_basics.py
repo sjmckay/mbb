@@ -6,26 +6,26 @@ from multiprocessing import freeze_support
 if __name__ == "__main__":
     freeze_support()
     m1 = MBB(z=4,L=12,T=45,beta=2.0,pl=True,opthin=False)
-    m1.fit(phot=([850/5.],[0.0021],[0.00032]),niter=10,to_vary=['N'],restframe=True)
+    m1.fit(phot=([850/5.],[0.0021],[0.00032]),niter=10,params=['L'],restframe=True)
     print(m1.eval(850,z=4).value*1000,'mJy')
     m1.plot_sed(obs_frame=True)
     plt.title('m1')
 
     m2 = MBB(z=4,L=12,T=45,beta=2.0,pl=False,opthin=True)
-    m2.fit(phot=([450/5., 850/5.],[0.0026, 0.0021],[0.00052, 0.00032]),niter=10,to_vary=['N'],restframe=True)
+    m2.fit(phot=([450/5., 850/5.],[0.0026, 0.0021],[0.00052, 0.00032]),niter=10,params=['L'],restframe=True)
     print(m2.eval(850,z=4).value*1000,'mJy')
     m2.plot_sed(obs_frame=True)
     plt.title('m2')
 
     m3 = MBB(z=4,L=12,T=45,beta=2.0,pl=False,opthin=False)
-    m3.fit(phot=([850/5.],[0.0021],[0.00032]),niter=10,to_vary=['N'],restframe=True)
+    m3.fit(phot=([850/5.],[0.0021],[0.00032]),niter=10,params=['L'],restframe=True)
     print(m3.eval(850,z=4).value*1000,'mJy')
     m3.plot_sed(obs_frame=True)
     plt.title('m3')
 
 
     m4 = MBB(z=4,L=12,T=45,beta=2.0,pl=True,opthin=True)
-    m4.fit(phot=([850/5.],[0.0021],[0.00032]),niter=10,to_vary=['N'],restframe=True)
+    m4.fit(phot=([850/5.],[0.0021],[0.00032]),niter=10,params=['L'],restframe=True)
     print(m4.eval(850,z=4).value*1000,'mJy')
     m4.plot_sed(obs_frame=True)
     plt.title('m4')
