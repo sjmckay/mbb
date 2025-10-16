@@ -13,7 +13,7 @@ The simplest way to install `mbb` is with `pip`; e.g., `pip install mbb`.
 
 ## Usage
 
-**mbb** can be used to generate mock SEDs based on a range of dust emission parameters, or it can be used to fit dust emission models to observed photometry and extract the best-fit parameters. The code is fully Bayesian, built on the [`emcee`](https://emcee.readthedocs.io/en/stable/) package.
+**mbb** can be used to generate mock SEDs based on a range of dust emission parameters, or it can be used to fit dust emission models to observed photometry and extract the best-fit parameters. The code is fully Bayesian, built with the [`emcee`](https://emcee.readthedocs.io/en/stable/) package.
 
 
 Documentation and examples available [here.](https://mbb.readthedocs.io/en/latest/)
