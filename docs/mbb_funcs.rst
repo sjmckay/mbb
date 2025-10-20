@@ -14,3 +14,4 @@ The documentation for the overall model is below:
 
 .. automodule:: mbb.mbb_funcs
     :members:
+    :exclude-members: planckbb

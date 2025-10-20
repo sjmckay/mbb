@@ -22,7 +22,7 @@ def _ot_mbb(l, Nbb, beta, T, z,l0=200):
     """Optically thin modified blackbody function"""
     Tcmbz = Tcmb0*(1+z)
     Tz = (T**(4+beta)  +  (Tcmb0)**(4+beta) * ((1+z)**(4+beta)-1) ) **(1/(4+beta))
-    result = (1 - (_planckbb(l,Tcmbz)/_planckbb(l,Tz))) * (Tz/T)**(4+beta) \
+    result = (1 - (planckbb(l,Tcmbz)/planckbb(l,Tz))) * (Tz/T)**(4+beta) \
             * 10.0**Nbb *(l0*1e-6/c)**beta * 2*h / c**2 * (c/(l*1.e-6))**(beta+3)/(np.exp(h*c/(l*1e-6*k_B*T))-1)
     return result
 
@@ -31,7 +31,7 @@ def _go_mbb(l, Nbb, beta, T, z,l0=200):
     Tcmbz = Tcmb0*(1+z)
     Tz = (T**(4+beta)  +  (Tcmb0)**(4+beta) * ((1+z)**(4+beta)-1) ) **(1/(4+beta))
     ### general opacity version
-    result = (1 - (_planckbb(l,Tcmbz)/_planckbb(l,Tz))) * (Tz/T)**(4+beta) \
+    result = (1 - (planckbb(l,Tcmbz)/planckbb(l,Tz))) * (Tz/T)**(4+beta) \
                 * 10.0**Nbb * 2*h / c**2 * ((1.0 - np.exp(-(l0/l)**beta))*(c/(l*1.e-6))**3.0)/(np.exp(h*c/(l*1.e-6*k_B*T))-1.0)
     return result
 
@@ -103,5 +103,5 @@ def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False,
         else: return _go_mbb(l, N,beta,T,z,l0=l0) 
 
 
-def _planckbb(l,T): # note although this requires wavlength in micron, it represents B_nu
+def planckbb(l,T): # note although this requires wavlength in micron, it represents B_nu
     return 2*h / c**2 * (c/(l*1e-6))**3 / (np.exp(h*c/(l*1e-6*k_B*T))-1)
