@@ -5,6 +5,7 @@
 
 # Imports
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import emcee
@@ -26,22 +27,13 @@ from functools import partial
 import multiprocessing as mp
 from multiprocessing import Pool, cpu_count
 
-try: #not sure if this is a good idea
-    from sjmm_util.config import set_plot_defaults
-    set_plot_defaults()
-except: pass
-
 NCORES = cpu_count()-2
-
 Tcmb0 = 2.75
-
 NWALKERS = 180
 NITER = 2000
 NBURN = 300
 STEPSIZE = 1e-7
-
 CURRENT_Z = 0
-
 LLO = 8
 LHI = 1000
 
@@ -403,7 +395,7 @@ class ModifiedBlackbody:
 
         #some nice defaults
         default_kwargs = {}
-        default_kwargs['label_kwargs']={'fontsize':20}
+        default_kwargs['label_kwargs']={'fontsize':14}
         default_kwargs['smooth'] = 1
         default_kwargs['color'] = 'k'
         default_kwargs['hist_kwargs'] = {'color':'xkcd:slate blue','histtype':'stepfilled'}
