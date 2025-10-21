@@ -7,14 +7,10 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 import emcee
 import corner
-
 import sys
-
 import warnings
-
 from copy import deepcopy
 
 # from astropy.table import Table, QTable
@@ -29,6 +25,11 @@ from functools import partial
 
 import multiprocessing as mp
 from multiprocessing import Pool, cpu_count
+
+try: #not sure if this is a good idea
+    from sjmm_util.config import set_plot_defaults
+    set_plot_defaults()
+except: pass
 
 NCORES = cpu_count()-2
 
@@ -334,7 +335,7 @@ class ModifiedBlackbody:
         to use a separate, more detailed plotting function for figures.
 
         Args:
-            obs_frame (bool): whether to plot against observed-frame wavelengths (default is rest frame).s
+            obs_frame (bool): whether to plot against observed-frame wavelengths (default is rest frame).
             ax (matplotlib.pyplot.Axes): axes to plot the model on. 
         Returns:
             matplotlib.pyplot.figure: the current figure
@@ -342,9 +343,8 @@ class ModifiedBlackbody:
         """
         if ax is None: fig, ax = plt.subplots(figsize=(5,4),dpi=120) 
         else: fig = ax.get_figure()
-        x = np.logspace(1,4,5000)
+        x = np.logspace(0.8,4,1000)
         if self.fit_result != None:
-            nsamples = 200
             y, lb,ub = self._get_model_spread(x)
         else: y = self.eval(x ,z=0)
         if obs_frame == True:
@@ -354,7 +354,7 @@ class ModifiedBlackbody:
             ax.set(xlabel = r'$\lambda$ rest-frame [$\mu$m]', ylabel = 'Flux [mJy]')
         ax.plot(x,y*1000, ls='-',linewidth=0.7,color='k')
         if self.fit_result != None: 
-            ax.fill_between(x,lb*1000,ub*1000,color='steelblue',alpha=0.3)
+            ax.fill_between(x,lb*1000,ub*1000,color='xkcd:slate blue',alpha=0.3)
 
         if self._phot != None:
             #initialize fitting arrays
@@ -369,14 +369,20 @@ class ModifiedBlackbody:
             fit_wl = fit_wl[~mask]
             fit_flux = fit_flux[~mask]
             fit_err = fit_err[~mask]
-            ax.errorbar(fit_wl, fit_flux, fit_err, 
-                        c='r', ls='', marker = 'o', ms = 3,
+            mask = (fit_flux !=0) #& (fit_flux/fit_err > 3.0) uncomment for pseudo upper limit 
+            ax.errorbar(fit_wl[mask], fit_flux[mask], fit_err[mask], 
+                        c='r', ls='', marker = 'o', ms = 3,fillstyle='none',
                         elinewidth=0.5, capsize = 1.5, ecolor = 'r')
+            ax.errorbar(fit_wl[~mask], fit_err[~mask], yerr = 0.15*fit_err[~mask],
+                    uplims=True,elinewidth=0.5, capsize = 2.5, ecolor = 'r',
+                    c='r', ls='', marker = 'v', ms = 0,fillstyle='none')
+        ax.grid(ls=':',c='gray',lw=0.4)
         ax.set(xscale='log', yscale='log')
         ax.set(xlim = (x.min(), x.max()*0.2), ylim=(1e-2,2e2))
-        ax.annotate(f'z = {np.round(float(self.z),2)}', xy=(0.02, 0.93), xycoords = 'axes fraction')
-        ax.annotate(r'$\beta$ '+f'= {np.round(self.beta,2)}', xy=(0.02, 0.86), xycoords = 'axes fraction')
-        ax.annotate(r'$T$ '+f'= {np.round(self.T,1)} K', xy=(0.02, 0.79), xycoords = 'axes fraction')
+        ax.annotate(fr'$z$ $=${self.z:.2f}', xy=(0.05, 0.93), xycoords = 'axes fraction')
+        ax.annotate(r'$\beta $'+fr' $=$ {self.beta:.2f}', xy=(0.75, 0.93), xycoords = 'axes fraction')
+        ax.annotate(r'$T$ '+fr'$=$ {self.T:.0f} K', xy=(0.75, 0.86), xycoords = 'axes fraction')
+        ax.annotate(r'$\log(L_{\rm IR})$ '+fr'$=$ {self.L:.2f}', xy=(0.05, 0.86), xycoords = 'axes fraction')
         return fig, ax
     
 
@@ -394,15 +400,26 @@ class ModifiedBlackbody:
             lirs = lirs.reshape(len(lirs),1)
             whereN = np.where(np.array(self._to_vary) == 'N')[0]
             data[:,whereN] = lirs
+
+        #some nice defaults
+        default_kwargs = {}
+        default_kwargs['label_kwargs']={'fontsize':20}
+        default_kwargs['smooth'] = 1
+        default_kwargs['color'] = 'k'
+        default_kwargs['hist_kwargs'] = {'color':'xkcd:slate blue','histtype':'stepfilled'}
+        default_kwargs['plot_density'] = False
+        default_kwargs['plot_datapoints'] = False
+        default_kwargs['use_math_text'] = True
+        default_kwargs['show_titles'] = False
+        all_kwargs =  default_kwargs | kwargs
+
         fig = corner.corner(
         data, 
-        labels=[labels[key] for key in self._to_vary], 
+        labels=[labels[key] for key in self._to_vary],
         quantiles=(0.16,0.5,0.84),
-        show_titles=True,
-        **kwargs
+        **all_kwargs
         )
         return fig
-
 
     def eval(self, wl,z=None):
         """Evaluate MBB at wavelength

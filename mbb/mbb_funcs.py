@@ -82,7 +82,9 @@ def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False,
         scale=0.75
         if pl_piecewise: scale=1.0
 
-        l_c = _exact_l_c(N, beta, T, z, alpha, l0=l0, opthin=opthin, scale=scale)
+        try:
+            l_c = _exact_l_c(N, beta, T, z, alpha, l0=l0, opthin=opthin, scale=scale)
+        except ValueError: l_c = _approx_l_c(alpha, T, opthin=opthin, scale=scale)
         # l_c = _approx_l_c(alpha, T, opthin=opthin, scale=scale)
         if opthin: 
             norm = _ot_mbb(l_c, N,beta,T,z,l0=l0)

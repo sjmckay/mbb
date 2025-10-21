@@ -18,13 +18,14 @@ if __name__ == "__main__":
     plt.title('m2')
 
     m3 = MBB(z=4,L=12,T=45,beta=2.0,pl=False,opthin=False)
+    m3.plot_sed(obs_frame=True)
     m3.fit(phot=([850/5.],[0.0021],[0.00032]),niter=10,params=['L'],restframe=True)
     print(m3.eval(850,z=4).value*1000,'mJy')
     m3.plot_sed(obs_frame=True)
     plt.title('m3')
 
-
     m4 = MBB(z=4,L=12,T=45,beta=2.0,pl=True,opthin=True)
+    m4.plot_sed(obs_frame=True)
     m4.fit(phot=([850/5.],[0.0021],[0.00032]),niter=10,params=['L'],restframe=True)
     print(m4.eval(850,z=4).value*1000,'mJy')
     m4.plot_sed(obs_frame=True)
@@ -40,13 +41,13 @@ if __name__ == "__main__":
     plt.title('m6')
 
     m7 = MBB(z=2,L=12,T=45,beta=2.0,pl=False,opthin=True)
-    m7.fit(phot=([160/3., 250/3.,  850/3., 1200/3.],[0.0015,0.0035,0.0021,0.0007],[0.00032,0.00032,0.00032,0.00032]),niter=100,to_vary=['N','T','beta'],restframe=True)
+    m7.fit(phot=([160/3., 250/3.,  850/3., 1200/3.],[0.0015,0.0035,0.0021,0.0007],[0.00032,0.00032,0.00032,0.00032]),niter=100,params=['N','T','beta'],restframe=True)
     print(m7.eval(850,z=2).value*1000,'mJy')
     m7.plot_sed(obs_frame=True)
     plt.title('m7')
 
     m8 = MBB(z=2,L=12,T=45,beta=2.0,pl=True,opthin=False)
-    m8.fit(phot=([160/3., 250/3.,  850/3., 1200/3.],[0.0015,0.0035,0.0021,0.0007],[0.00032,0.0009,0.00032,0.00032]),niter=100,to_vary=['N','T','z'],restframe=True)
+    m8.fit(phot=([160/3., 250/3.,  850/3., 1200/3.],[0.0015,0.0035,0.0021,0.0007],[0.00032,0.0009,0.00032,0.00032]),niter=100,params=['N','T','z'],restframe=True)
     m8.plot_sed(obs_frame=True)
     plt.title('m8')
     m8.plot_corner()
