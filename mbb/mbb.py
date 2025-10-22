@@ -402,7 +402,7 @@ class ModifiedBlackbody:
         default_kwargs['plot_density'] = False
         default_kwargs['plot_datapoints'] = False
         default_kwargs['use_math_text'] = True
-        default_kwargs['show_titles'] = False
+        default_kwargs['show_titles'] = True
         all_kwargs =  default_kwargs | kwargs
 
         fig = corner.corner(
