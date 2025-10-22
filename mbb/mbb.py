@@ -259,7 +259,7 @@ class ModifiedBlackbody:
 
         .. code-block:: python
             
-           m.posterior('beta', q = [16,50,84]) # get median and 16th--84th percentile interval
+           m.post_percentile('beta', q = [16,50,84]) # get median and 16th--84th percentile interval
         
         Args:
             param (str): name of parameter, element of the 'params' argument passed to ModifiedBlackbody.fit()
@@ -480,15 +480,17 @@ class ModifiedBlackbody:
         else: raise ValueError(f"wllimits must be in the form (l_low, l_high) with l_low < l_high, received {wllimits}")
     
 
-    def _compute_dust_mass(self,):
+    def _compute_dust_mass(self,kappa=0.15):
         '''
         Compute dust mass for this ModifiedBlackbody.
+
+        kappa coeff: 
+            0.0469 taken from Traina+2024/Draine+14 at 850um
+            0.15 from Casey+12 at 850um
         '''
         l0= 850.
         DL = self._cosmo.luminosity_distance(self.z)
-        kappa_B_T = 0.15*u.m**2/u.kg * 1e26 * planckbb(l0, T=self.T) #kappa coeff: 
-                                                                        # 0.0469 taken from Traina+2024/Draine+14 at 850um
-                                                                        # 0.15 from Casey+12 at 850um
+        kappa_B_T = kappa**u.m**2/u.kg * 1e26 * planckbb(l0, T=self.T) 
         Snu = self.eval(l0,z=0).value
         dustmass = Snu * DL**2 / kappa_B_T / (1.+self.z)
         return dustmass.to(u.Msun)
@@ -566,7 +568,7 @@ class ModifiedBlackbody:
                 p[key] = t[i] # replace that parameter with fitted parameter
             mod = self._model(lam,**p)
             models.append(mod)
-        spread = np.nanstd(models, axis=0)
+        # spread = np.nanstd(models, axis=0)
         lb,med_model,ub = np.nanpercentile(models,[16,50,84],axis=0)
         return med_model, lb, ub
 
