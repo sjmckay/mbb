@@ -6,7 +6,7 @@ from multiprocessing import freeze_support
 if __name__ == "__main__":
     
     test = np.zeros(8) 
-    test[[2]] = True #change to run different tests
+    test[:] = True #change to run different tests
     freeze_support()
     
     if test[0]:
