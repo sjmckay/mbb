@@ -113,7 +113,7 @@ By default, uniform priors are assumed on all the fit parameters, but you can ch
 Each key of ``priors`` should be the name of a parameter, and each value is either:
 
 1. a dictionary with keywords ``mu`` and ``sigma``, to specify Gaussian priors
-2. your own function, which takes the parameter as an argument and returns a number between 0.0 and 1.0.
+2. your own function, which takes the parameter as an argument and returns the probability density.
 
 .. code-block:: python
 

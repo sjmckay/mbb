@@ -24,14 +24,16 @@ cosmo = FlatLambdaCDM(H0=70.0, Om0=0.30)
 
 from functools import partial
 
+from scipy.stats import norm
+
 import multiprocessing as mp
 from multiprocessing import Pool, cpu_count
 
 NCORES = cpu_count()-2
 Tcmb0 = 2.75
 NWALKERS = 180
-NITER = 2000
-NBURN = 300
+NITER = 1000
+NBURN = 1000
 STEPSIZE = 1e-7
 CURRENT_Z = 0
 LLO = 8
@@ -86,6 +88,7 @@ class ModifiedBlackbody:
         self._fit_result = None
         self._phot=None
         self._priors = None
+        self._uplims = None
     
 
     #read-only attributes
@@ -128,7 +131,7 @@ class ModifiedBlackbody:
         else:
             raise ValueError(f"'new_cosmo' must be of type astropy.cosmology.Cosmology, got {type(new_cosmo)}")
 
-    def fit(self, phot, nwalkers=400, niter=500, ncores = NCORES, stepsize=1e-7,params=['L','beta','T'],priors=None,restframe=False,pool=None):
+    def fit(self, phot, uplims=None, nwalkers=400, nburn = NBURN, niter=NITER, ncores = NCORES, stepsize=1e-7,params=['L','beta','T'],priors=None,restframe=False,pool=None):
         """Fit photometry
 
         Fit a modified blackbody to photometry.
@@ -158,9 +161,11 @@ class ModifiedBlackbody:
            reduc_chi2 = result['chi2']/(result['n_bands']-result['n_params']) # reduced chi-squared
 
         Args:
-            phot (array-like): wavelengths and photometry, arranged as a 3 x N array (wavelength, flux, error). 
+            phot (array-like, 3 x N): wavelengths and photometry, arranged as a 3 x N array (wavelength, flux, error). 
             Wavelengths should be given as rest-frame values.
+            uplims (bool, array-like of length N): whether each band in phot is a upper limit (limit equal to flux if > error, otherwise limit = error) 
             nwalkers (int): how many walkers should be used in the MCMC fit. 
+            nburn (int): number of MCMC steps to discard (default is 1000)
             niter (int): how many iterations to run in the fit.
             ncores (int): how many CPU cores to use in multiprocessing. If ``pool`` is not ``None``, this is ignored. Set to 1 to not use multiprocessing. \
                 Default is number of available CPUs - 2.
@@ -169,7 +174,7 @@ class ModifiedBlackbody:
                 ``L`` should generally be included since it represents the normalization of the model. 
             priors (dict): Priors to use in the Bayesian fitting. This should be a dictionary with keys corresponding \
                 to the elements of ``params``. For each key, the corresponding value can be either (1) a function that takes the value of the parameter and \
-                returns a number between 0.0 and 1.0, or (2) a dictionary with keys 'mu' and 'sigma', in which case the code will use these to \
+                returns the relative probability density (in linear space), or (2) a dictionary with keys 'mu' and 'sigma', in which case the code will use these to \
                 generate a Gaussian prior on that parameter. If ``None``, or for any params not included in ``priors``, flat (uniform) priors will be assumed. \
                 Currently, ``T`` is constrained to be between 5 K and 120 K, ``beta`` is between 0.1 and 5.0, and ``z`` is between 0.1 and 12.
             restframe (bool): whether wavelengths in ``phot`` are given in the rest frame (default is observed frame)
@@ -181,11 +186,18 @@ class ModifiedBlackbody:
         if restframe: self._phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
         else: self._phot = (phot[0]/(1.0+self.z),phot[1],phot[2])
         self._priors = priors
+        if uplims is None: self._uplims = np.zeros_like(phot[0],dtype=bool)
+        else: 
+            uplims = np.atleast_1d(uplims)
+            if uplims.shape[0] != phot.shape[1]:
+                raise ValueError(
+                    f"Upper limits must have length equal to the number of bands. "
+                    f"Got len(uplims)={uplims.shape[0]}, n bands={phot.shape[1]}")
+            self._uplims = uplims
 
         # replace L with N (under the hood, we use N to normalize the model)
         if 'L' in params: 
-            i = params.index('L')
-            params[i] = 'N'
+            params[params.index('L')] = 'N'
 
         initdict = self._fit_param_dict()
         try:
@@ -201,12 +213,13 @@ class ModifiedBlackbody:
         p0 = [np.array(init) + stepsize * np.random.randn(ndim) for i in range(nwalkers)]
 
         #run the MCMC fit
-        sampler = self._run_fit(p0=p0, nwalkers=nwalkers, niter=niter, ncores=ncores, lnprob=self._lnprob, 
+        sampler = self._run_fit(p0=p0, nwalkers=nwalkers, nburn=nburn, niter=niter, ncores=ncores, logprob=self._logprob, 
             ndim=ndim, to_vary = params, fixed = fixed, pool=pool)
         self._fit_result = {'sampler':sampler}
 
         #get 16,50,84 percentiles of fitted parameters and update
         med_params = self._get_params_spread()
+        print(med_params)
         updated = initdict
         for i, key in enumerate(params):
             updated[key] = med_params[1][i]
@@ -356,18 +369,21 @@ class ModifiedBlackbody:
                 fit_wl = self._phot[0] 
             fit_flux = 1000*self._phot[1] #mJy
             fit_err = 1000*self._phot[2]
-            # check for nondetections and or incorrect input
-            mask = (fit_wl < 0) | (fit_flux < 0) | (fit_err < 0)
+            # check for unusual fluxes or errors
+            mask = (fit_err < 0) | (fit_err >= 1e95)
             fit_wl = fit_wl[~mask]
             fit_flux = fit_flux[~mask]
             fit_err = fit_err[~mask]
-            mask = (fit_flux !=0) #& (fit_flux/fit_err > 3.0) uncomment for pseudo upper limit 
-            ax.errorbar(fit_wl[mask], fit_flux[mask], fit_err[mask], 
-                        c='r', ls='', marker = 'o', ms = 3,fillstyle='none',
-                        elinewidth=0.5, capsize = 1.5, ecolor = 'r')
-            ax.errorbar(fit_wl[~mask], fit_err[~mask], yerr = 0.15*fit_err[~mask],
+            uplim_mask = self._uplims #upper limit 
+            ax.errorbar(fit_wl[~uplim_mask], fit_flux[~uplim_mask], fit_err[~uplim_mask], 
+                        c='k', ls='', marker = 'o', ms = 3,fillstyle='none',
+                        elinewidth=0.5, capsize = 1.5, ecolor = 'k', label="data")
+            #plot 3-sig upper limits or specified upper limit
+            ulims = fit_flux
+            ulims[ulims<fit_err] = 3*fit_err[ulims<fit_err]
+            ax.errorbar(fit_wl[uplim_mask], ulims[uplim_mask], yerr = 0.15*ulims[uplim_mask],
                     uplims=True,elinewidth=0.5, capsize = 2.5, ecolor = 'r',
-                    c='r', ls='', marker = 'v', ms = 0,fillstyle='none')
+                    c='r', ls='', marker = 'v', ms = 0,fillstyle='none',label='3-sig UL')
         ax.grid(ls=':',c='gray',lw=0.4)
         ax.set(xscale='log', yscale='log')
         ax.set(xlim = (x.min(), x.max()*0.2), ylim=(1e-2,2e2))
@@ -496,7 +512,7 @@ class ModifiedBlackbody:
         return dustmass.to(u.Msun)
 
 
-    def _run_fit(self, p0,nwalkers,niter,ndim,lnprob,ncores=NCORES,to_vary=['N','beta','T'], fixed=None,pool=None):
+    def _run_fit(self, p0,nwalkers,nburn,niter,ndim,logprob,ncores=NCORES,to_vary=['N','beta','T'], fixed=None,pool=None):
         """
         Function to handle the actual MCMC fitting routine of this ModifiedBlackbody's internal model.
 
@@ -505,7 +521,7 @@ class ModifiedBlackbody:
             nwalkers: number of walkers to use in MCMC run
             niter: number of iterations
             ndim: dimensionality (usally len(p0))
-            lnprob: function used to determine logarithmic probability
+            logprob: function used to determine (logarithmic) posterior probability
             ncores: number of CPU cores to use
             to_vary: parameter names to vary in fit.
             fixed: dictionary of fixed parameters (keys=names, values=values)
@@ -525,9 +541,9 @@ class ModifiedBlackbody:
                 pool = ctx.Pool(processes=ncores)
                 close_pool = True
         try:
-            sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool, parameter_names=to_vary, kwargs=fixed)
+            sampler = emcee.EnsembleSampler(nwalkers, ndim, logprob, pool=pool, parameter_names=to_vary, kwargs=fixed)
             print("Running burn-in...")
-            p0, _, _ = sampler.run_mcmc(p0, NBURN,progress=True)
+            p0, _, _ = sampler.run_mcmc(p0, nburn, progress=True)
             sampler.reset()
             print("Running fitter...")
             state = sampler.run_mcmc(p0, niter,progress=True)
@@ -590,22 +606,30 @@ class ModifiedBlackbody:
         return partial(mbb_func, opthin=self.opthin, pl=self.pl, pl_piecewise=self._pl_piecewise)
 
 
-    def _lnlike(self, params, **kwargs):
+    def _loglike(self, params, **kwargs):
         x = self._phot[0]
         #reset rest frame wls if z is varied
         if 'z' in params.keys():
             x *= (1.0+self.z)/(1.0+params['z'])
         y = self._phot[1]
         yerr = self._phot[2]
-        ymodel = self._model(x, **params, **kwargs)
-        wres = np.sum(((y-ymodel)/yerr)**2)
-        lnlike = -0.5*wres
-        if np.isnan(lnlike):
+        ymodel = np.array(self._model(x, **params, **kwargs))
+        uplims = self._uplims
+
+        y_d, yerr_d, ymod_d = y[~uplims], yerr[~uplims], ymodel[~uplims] #detections
+        y_nd, yerr_nd, ymod_nd = y[uplims], yerr[uplims], ymodel[uplims] #non-detections
+        ulim_nd = y_nd #start with assuming measured flux is upper limit
+        ulim_nd[ulim_nd<yerr_nd] = yerr_nd[ulim_nd<yerr_nd] #use 1-sig upper limit if actual measured flux is lower than this
+
+        loglike_detect = -0.5 * np.sum(((y_d-ymod_d)/yerr_d)**2) #+ np.log(2*np.pi*yerr_d**2)) #technically second term is unneeded since only care about relative likelihoods, model independent yerr
+        loglike_nondetect = np.sum(norm.logcdf((ulim_nd - ymod_nd) / yerr_nd)) # assumes sigma = 1-sigma upper limit
+        loglike = loglike_detect + loglike_nondetect
+        if np.isnan(loglike):
             return -np.inf
-        return lnlike
+        return loglike
     
 
-    def _lnprior(self, params):
+    def _logprior(self, params):
         if 'T' in params.keys():
             T = params['T']
             if T < 5 or T > 120: return -np.inf
@@ -615,31 +639,36 @@ class ModifiedBlackbody:
         if 'z' in params.keys(): 
             z = params['z']
             if z > 12.0 or z < 0.1: return -np.inf
-        
-        def ln_gauss(x,mu,sigma):
+        if 'N' in params.keys(): 
+            N = params['N']
+            if N < 2: return -np.inf #approx less than 1 Lsun
+
+        def log_gauss(x,mu,sigma):
             return -(x - mu) ** 2 / (2 * sigma ** 2)
 
         #determine prior based on multiplying individual prior functions (addition in log space)
         if self._priors == None: return 0.0
-        lnpriors = 0.0
+        logpriors = 0.0
         for p in params.keys():
             if p in self._priors.keys():
                 try:
                     if type(self._priors[p]) == dict:
-                        val = ln_gauss(params[p], mu=self._priors[p]['mu'], sigma=self._priors[p]['sigma'])
+                        val = log_gauss(params[p], mu=self._priors[p]['mu'], sigma=self._priors[p]['sigma'])
                     else: val = np.log(self._priors[p](params[p]))
                 except KeyError as e: # if no prior available, use uniform prior
                     warnings.warn(f'Received error "{e}" due to incompatible prior for param "{p}"')
                     val = 0.0
-                if not np.isnan(val) and val <= 0.0: lnpriors += val
-        return lnpriors
+                if not np.isnan(val) and val <= 0.0: logpriors += val
+            elif p =='N': # if varying normalization but not specifying a prior, use uniform in linear space
+                logpriors += N*np.log(10)
+        return logpriors
 
 
-    def _lnprob(self, params, **kwargs):
-        lp = self._lnprior(params)
+    def _logprob(self, params, **kwargs):
+        lp = self._logprior(params)
         if not np.isfinite(lp):
             return -np.inf
-        return lp + self._lnlike(params, **kwargs)
+        return lp + self._loglike(params, **kwargs)
 
 
     def save_out_full(self,filepath):
