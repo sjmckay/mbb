@@ -1,6 +1,6 @@
 # mbb
 
-**mbb** is an implementation of a modified blackbody (MBB) model, commonly used for fitting the spectral energy distributions (SEDs) of dusty star-forming galaxies (DSFGs) as well as other astrophysical phenomena.
+**mbb** is an implementation of a modified blackbody (MBB) model, commonly used for fitting the spectral energy distributions (SEDs) of dusty galaxies. The code can be used as a simple SED model or to fit photometric data and perform Bayesian parameter estimation. Uncertainties and upper limits are properly accounted for, and the code allows easy access to useful posterior metrics.
 
 Feel free to suggest updates/point out issues on the [GitHub page](https://github.com/mckay-sjm/mbb_model).
 
