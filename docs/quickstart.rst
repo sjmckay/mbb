@@ -238,12 +238,12 @@ Dust mass:
     
     8.804948529939795
 
-Peak wavelength of the dust emission (rest frame):
+Wavelength where dust emission peaks (proxy for temperature):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
     
-    m.get_peak_wavelength()
+    m.get_peak_wavelength() # note this is a rest-frame wl
 
 
 .. code-block:: python
