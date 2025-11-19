@@ -58,7 +58,7 @@ Fitting photometric data
 Most often, you want to fit a given model to photometric data points. ``mbb`` allows for Bayesian model fitting via the ``fit()`` method, which uses the ``emcee`` package to perform Markov Chain Monte Carlo (MCMC) sampling of the parameter space:
 
 Note: ``mbb`` handles upper limits correctly in the Bayesian likelihood function. To specify which data should be treated as upper limits, pass a boolean array to the ``uplims``  keyword of ``fit()``. 
-The code assumes that, for each photometric band labeled as an upper limit, the flux value should be used as the limit (accounting for the $1\sigma$ uncertainty as well) if it is positive and larger than the $1\sigma$ error, otherwise this error is used as the limit. 
+The code assumes that, for each photometric band labeled as an upper limit, the flux value should be used as the limit (accounting for the :math:`1\sigma` uncertainty as well) if it is positive and larger than the $1\sigma$ error, otherwise this error is used as the limit. 
 
 .. code-block:: python
 
