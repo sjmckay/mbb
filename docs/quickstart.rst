@@ -69,7 +69,7 @@ The code assumes that, for each photometric band labeled as an upper limit, the 
 	     [0.0044, 0.0064, 0.0036, 0.00057, 0.0003]]  # error in Jy
 	    )
 	uplims=phot[1]/phot[2] < 3.0 # upper limit if not detected at >= 3-sigma
-	result = m.fit(phot=phot, uplims=uplims, niter=1000, params=['L', 'T', 'beta'], restframe=False)
+	result = m.fit(phot=phot, uplims=uplims, niter=1000, params=['L', 'T', 'beta'])
 
 .. code-block::
 
