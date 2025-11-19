@@ -25,7 +25,7 @@ Here we have chosen an optically thin model with no mid-infrared power law. A qu
     plt.show()
 
 .. image:: images/ex_plt_1a.png
-   :width: 350px
+   :width: 380px
 
 Alternatively, we could choose, say, a general opacity model with the power law included (default power-law slope ``alpha=2.0`` and turnover wavelength ``l0=200`` microns):
 
@@ -36,7 +36,7 @@ Alternatively, we could choose, say, a general opacity model with the power law 
     plt.show()
 
 .. image:: images/ex_plt_1b.png
-   :width: 350px
+   :width: 380px
 
 
 The above model follows `Casey (2012) <https://doi.org/10.1111/j.1365-2966.2012.21455.x>`_, where the power law is joined at 3/4 the wavelength where the slope equals ``alpha``. 
@@ -49,7 +49,7 @@ If you prefer a piecewise power law connected where the slope of the blackbody m
     plt.show()
 
 .. image:: images/ex_plt_1c.png
-   :width: 350px
+   :width: 380px
 
 
 Fitting photometric data
@@ -57,30 +57,31 @@ Fitting photometric data
 
 Most often, you want to fit a given model to photometric data points. ``mbb`` allows for Bayesian model fitting via the ``fit()`` method, which uses the ``emcee`` package to perform Markov Chain Monte Carlo (MCMC) sampling of the parameter space:
 
+Note: ``mbb`` handles upper limits correctly in the Bayesian likelihood function. To specify which data should be treated as upper limits, pass a boolean array to the ``uplims``  keyword of ``fit()``. 
+The code assumes that, for each photometric band labeled as an upper limit, the flux value should be used as the limit (accounting for the $1\sigma$ uncertainty as well) if it is positive and larger than the $1\sigma$ error, otherwise this error is used as the limit. 
+
 .. code-block:: python
 
-    phot = (
-        [250, 350, 450, 850, 1200], # wavelength in microns
-        [0.012, 0.019, 0.0166, 0.00683, 0.0023], # flux in Jy
-        [0.0044, 0.0064, 0.0036, 0.00057, 0.0003]  # error in Jy
-        )
-    result = m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], restframe=False)
+    import numpy as np
+    phot = np.array(
+	    [[250, 350, 450, 850, 1200], # wavelength in microns
+	     [0.012, 0.019, 0.0166, 0.00683, 0.0023], # flux in Jy
+	     [0.0044, 0.0064, 0.0036, 0.00057, 0.0003]]  # error in Jy
+	    )
+	uplims=phot[1]/phot[2] < 3.0 # upper limit if not detected at >= 3-sigma
+	result = m.fit(phot=phot, uplims=uplims, niter=1000, params=['L', 'T', 'beta'], restframe=False)
 
 .. code-block::
 
     Running burn-in...
-    100%|█████████████████████████████████████████| 300/300 [00:07<00:00, 38.87it/s]
+    100%|█████████████████████████████████████| 1000/1000 [00:35<00:00, 27.80it/s]
     Running fitter...
-    100%|█████████████████████████████████████████| 500/500 [00:12<00:00, 41.62it/s]
-    Done 
-
+    100%|█████████████████████████████████████| 1000/1000 [00:37<00:00, 26.34it/s]
+    Done
 
 
 You specify which parameters to fit using the ``params`` keyword argument; the options are ``L``, ``T``, ``beta``, ``alpha``, ``l0``, or ``z`` (the latter if you want to use ``mbb`` as a far-infrared photometric redshift code).
 The parameter values used to initialize the ``ModifiedBlackbody`` are also used by ``emcee`` as the starting parameters of the fit.
-
-Note: ``mbb`` handles upper limits correctly in the Bayesian likelihood function. To specify which data should be treated as upper limits, pass a boolean array to the ``uplims``  keyword of ``fit()``. 
-The code assumes that, for each photometric band labeled as an upper limit, the flux value should be used as the limit (accounting for the $1\sigma$ uncertainty as well) if it is positive and larger than the $1\sigma$ error, otherwise this error is used as the limit. 
 
 View the resulting model after the fit, with uncertainties:
 
@@ -91,7 +92,7 @@ View the resulting model after the fit, with uncertainties:
 
 
 .. image:: images/ex_plt_2.png
-   :width: 350px
+   :width: 380px
 
 
 You can also make a simple corner plot of the parameters that were varied:
@@ -120,16 +121,17 @@ Each key of ``priors`` should be the name of a parameter, and each value is eith
 
 .. code-block:: python
 
-    result = m.fit(phot=phot, niter=500, params=['L', 'T', 'beta'], 
+    result = m.fit(phot=phot, niter=1000, params=['L', 'T', 'beta'], 
         restframe=False, priors = {'beta':dict(mu=1.8,sigma=0.3)})
 
 .. code-block::
 
     Running burn-in...
-    100%|█████████████████████████████████████████| 300/300 [00:07<00:00, 38.87it/s]
+    100%|█████████████████████████████████████| 1000/1000 [00:36<00:00, 27.32it/s]
     Running fitter...
-    100%|█████████████████████████████████████████| 500/500 [00:12<00:00, 41.62it/s]
-    Done 
+    100%|█████████████████████████████████████| 1000/1000 [00:36<00:00, 27.20it/s]
+    Done
+
 
 
 Accessing the fit results
@@ -143,7 +145,7 @@ To access the percentiles of the posterior distribition for any parameter in the
 
 .. code-block:: python
     
-    [1.56834795 1.83519843 2.10055382]
+    [1.63739978 1.90546219 2.17945187]
 
 To get the reduced chi-squared value from the fit_result:
 
@@ -154,7 +156,7 @@ To get the reduced chi-squared value from the fit_result:
 
 .. code-block:: python
     
-    0.8697752576488373
+    0.8526608373363864
 
 
 Currently, the measurement for ``L`` requires integration under the hood, so it can take a long time. The same applies for generating the corner plots. I'm working on speeding this process up.
@@ -172,7 +174,7 @@ To clear the ``fit_result`` and priors, use ``reset()``. Note that the parameter
 
 .. code-block:: python
     
-    1.84
+    1.91
 
 
 Other utility functions
@@ -191,7 +193,7 @@ Flux at a given wavelength:
 
 .. code-block:: python
     
-    0.002494547015269406 Jy
+    0.0024958420867594506 Jy
 
 .. code-block:: python
     
@@ -202,7 +204,7 @@ Flux at a given wavelength:
 
 .. code-block:: python
     
-    18.869 mJy
+    18.438 mJy
 
 Infrared luminosity:
 ^^^^^^^^^^^^^^^^^^^^
@@ -215,9 +217,9 @@ Infrared luminosity:
 
 .. code-block::
     
-    2604054668115.043 solLum
-    12.42
-    12.42
+    2499320878862.3975 solLum
+    12.40
+    12.40
 
 
 
