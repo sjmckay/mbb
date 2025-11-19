@@ -87,19 +87,19 @@ def mbb_func(l, N=12,beta=1.8,T=35,z=0,alpha=2.0, l0=200, opthin=True, pl=False,
         except ValueError: l_c = _approx_l_c(alpha, T, opthin=opthin, scale=scale)
         # l_c = _approx_l_c(alpha, T, opthin=opthin, scale=scale)
         if opthin: 
-            norm = _ot_mbb(l_c, N,beta,T,z,l0=l0)
-            mbb_y = _ot_mbb(l, N,beta,T,z,l0=l0)
-            pl_y = _powerlaw(l, norm, alpha, l_c=l_c) 
+            norm = np.atleast_1d(_ot_mbb(l_c, N,beta,T,z,l0=l0))
+            mbb_y = np.atleast_1d(_ot_mbb(l, N,beta,T,z,l0=l0))
+            pl_y = np.atleast_1d(_powerlaw(l, norm, alpha, l_c=l_c))
         else: 
-            norm = _go_mbb(l_c, N,beta,T,z,l0=l0)
-            mbb_y = _go_mbb(l, N,beta,T,z,l0=l0)
-            pl_y = _powerlaw(l, norm, alpha,l_c=l_c) 
+            norm = np.atleast_1d(_go_mbb(l_c, N,beta,T,z,l0=l0))
+            mbb_y = np.atleast_1d(_go_mbb(l, N,beta,T,z,l0=l0))
+            pl_y = np.atleast_1d(_powerlaw(l, norm, alpha,l_c=l_c))
         if pl_piecewise: 
             mbb_y[l<l_c] = 0
             pl_y[l>=l_c] = 0
         else:
             pl_y *= np.exp(-(l/l_c)**2) #smooth fall off above l_c if not piecewise
-        return mbb_y + pl_y
+        return np.squeeze(mbb_y + pl_y)
     else:
         if opthin: return _ot_mbb(l, N,beta,T,z,l0=l0) 
         else: return _go_mbb(l, N,beta,T,z,l0=l0) 

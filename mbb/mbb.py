@@ -27,17 +27,10 @@ from functools import partial
 from scipy.stats import norm
 
 import multiprocessing as mp
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 
-NCORES = cpu_count()-2
+NCORES = mp.cpu_count()-2
 Tcmb0 = 2.75
-NWALKERS = 180
-NITER = 1000
-NBURN = 1000
-STEPSIZE = 1e-7
-CURRENT_Z = 0
-LLO = 8
-LHI = 1000
 
 
 
@@ -131,8 +124,9 @@ class ModifiedBlackbody:
         else:
             raise ValueError(f"'new_cosmo' must be of type astropy.cosmology.Cosmology, got {type(new_cosmo)}")
 
-    def fit(self, phot, uplims=None, nwalkers=400, nburn = NBURN, niter=NITER, ncores = NCORES, stepsize=1e-7,params=['L','beta','T'],priors=None,restframe=False,pool=None):
-        """Fit photometry
+    def fit(self, phot, uplims=None, params=['L','beta','T'], priors=None, restframe=False,
+            nwalkers=400, nburn = 1000, niter=1000, ncores = NCORES, stepsize=1e-7, pool=None):
+        """Fit model to photometry
 
         Fit a modified blackbody to photometry.
         Updates the parameters of this MBB model to the resulting parameters of the fit, and populates the ``fit_result`` attribute \
@@ -219,7 +213,6 @@ class ModifiedBlackbody:
 
         #get 16,50,84 percentiles of fitted parameters and update
         med_params = self._get_params_spread()
-        print(med_params)
         updated = initdict
         for i, key in enumerate(params):
             updated[key] = med_params[1][i]
@@ -257,7 +250,7 @@ class ModifiedBlackbody:
                     lirs.append(np.log10(self._integrate_mbb(**p,wllimits=(8,1000)).value))
                 return np.asarray(lirs)
             elif param in self._to_vary:
-                chain = self.fit_result['sampler'].get_chain(flat=True)[:,:]
+                chain = self.fit_result['sampler'].get_chain(flat=True)[::sample_by,:]
                 where = np.where(np.array(self._to_vary) == param)[0]
                 return np.squeeze(chain[:,where])
             else:
@@ -506,7 +499,7 @@ class ModifiedBlackbody:
         '''
         l0= 850.
         DL = self._cosmo.luminosity_distance(self.z)
-        kappa_B_T = kappa**u.m**2/u.kg * 1e26 * planckbb(l0, T=self.T) 
+        kappa_B_T = kappa*u.m**2/u.kg * 1e26 * planckbb(l0, T=self.T) 
         Snu = self.eval(l0,z=0).value
         dustmass = Snu * DL**2 / kappa_B_T / (1.+self.z)
         return dustmass.to(u.Msun)
@@ -538,6 +531,7 @@ class ModifiedBlackbody:
                     ctx = mp.get_context("spawn")
                 else:
                     ctx = mp.get_context("fork")
+                if ncores > mp.cpu_count(): ncores = mp.cpu_count()
                 pool = ctx.Pool(processes=ncores)
                 close_pool = True
         try:

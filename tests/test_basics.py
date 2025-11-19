@@ -1,67 +1,83 @@
-import matplotlib.pyplot as plt
 import numpy as np
-from mbb import ModifiedBlackbody as MBB
-from multiprocessing import freeze_support
+import unittest
+import astropy.units as u
 
-if __name__ == "__main__":
+from .utils import gen_phot, default_mbb
+
+
+class TestBasicMBB(unittest.TestCase):
+    def test_fit(self):
+        m1 = default_mbb(pl=True, opthin=True)
+        m2 = default_mbb(pl=False, opthin=True)
+        m3 = default_mbb(pl=True, opthin=False)
+        m4 = default_mbb(pl=False, opthin=False)
+        m5 = default_mbb(pl=False, opthin=False, pl_piecewise=True)
+        m6 = default_mbb(pl=True, opthin=False, pl_piecewise=True)
+
+        phot = gen_phot(nbands=2)
+        for m in [m1,m2,m3,m4,m5,m6]:
+            m.fit(phot, nburn=300, niter=400, params=['L','T'])
+            f850 = phot[1][1]
+            e850 = phot[0][1]
+            loss = np.abs(f850-m.eval(850).value)/e850
+            self.assertLess(loss, 3.0) #within 3sig of flux
+        
+    def test_variations(self):
+        m1 = default_mbb(pl=False, opthin=True, rand=True)
+        m2 = default_mbb(pl=True, opthin=False, pl_piecewise=True, rand=True)
+
+        phot = gen_phot(nbands=6)
+        for m in [m1,m2]:
+            m.fit(phot, nburn=400, niter=600,params=['L','beta','T'])
+            f850 = phot[1][1]
+            e850 = phot[0][1]
+            loss = np.abs(f850-m.eval(850).value)/e850
+            self.assertLess(loss, 3.0) #within 3sig of flux
     
-    test = np.zeros(8) 
-    test[:] = True #change to run different tests
-    freeze_support()
-    
-    if test[0]:
-        m1 = MBB(z=4,L=12,T=45,beta=2.0,pl=False,opthin=False)
-        m1.fit(phot=([850/5.],[0.0031],[0.00032]),niter=10,params=['L'],restframe=True)
-        print(m1.eval(850,z=4).value*1000,'mJy')
-        m1.plot_sed(obs_frame=True)
-        plt.title('m1')
+    def test_uplims(self):
+        m1 = default_mbb(pl=False, opthin=True, rand=True)
+        m2 = default_mbb(pl=True, opthin=False, pl_piecewise=True, rand=True)
 
-    if test[1]:
-        m2 = MBB(z=4,L=12,T=45,beta=2.0,pl=False,opthin=True)
-        m2.fit(phot=([450/5., 850/5.],[0.0016, 0.0021],[0.00212, 0.00032]), uplims = [True,False],niter=1000, params=['L','T'],restframe=True)
-        print(m2.eval(850,z=4).value*1000,'mJy')
-        m2.plot_sed(obs_frame=True)
-        plt.title('m2')
+        phot = gen_phot(nbands=3)
+        for m in [m1,m2]:
+            m.fit(phot, uplims = [True, False,False], nburn=400, niter=600, params=['L','T'])
+            f450 = phot[1][0]
+            e450 = phot[0][0]
+            self.assertLessEqual(m.eval(450).value, f450+3*e450)
 
-    if test[2]:
-        m3 = MBB(z=2.0,L=12,T=45,beta=2.0,pl=False,opthin=False)
-        # m3.plot_sed(obs_frame=True)
-        m3.fit(phot=([850],[0.0021],[0.0012]), niter=1000,params=['L'], uplims=True, priors={'L':{'mu':12,'sigma':0.6}})
-        print(m3.eval(850,z=2.5).value*1000,'mJy')
-        m3.plot_sed(obs_frame=True)
-        plt.title('m3')
+    def test_luminosity(self):
+        m1 = default_mbb(pl=False, opthin=True, rand=False)
+        self.assertAlmostEqual(np.log10(m1.get_luminosity().value), m1.L, places=1)
 
-    if test[3]:
-        m4 = MBB(z=4,L=12,T=45,beta=2.0,pl=True,opthin=True)
-        m4.plot_sed(obs_frame=True)
-        m4.fit(phot=([850/5.],[0.0021],[0.00032]),niter=10,params=['L'],restframe=True)
-        print(m4.eval(850,z=4).value*1000,'mJy')
-        m4.plot_sed(obs_frame=True)
-        plt.title('m4')
+    def test_dust_mass(self):
+        m1 = default_mbb(pl=False, opthin=True, rand=True)
+        self.assertIsInstance(m1.dust_mass, u.Quantity)
 
-    if test[4]:
-        m5 = MBB(z=2.5,L=11,T=30,beta=1.5,pl=True,opthin=False)
-        print(m5.eval(850,z=4).value*1000,'mJy')
-        m5.plot_sed(obs_frame=False)
-        plt.title('m5')
+    def test_peak_wavelength(self):
+        m1 = default_mbb(pl=False, opthin=True, rand=True)
+        self.assertIsInstance(m1.get_peak_wavelength(), u.Quantity)
 
-    if test[5]:
-        m6 = MBB(z=2,L=12,T=45,beta=2.0,pl=False,opthin=True)
-        m6.plot_sed(obs_frame=True)
-        plt.title('m6')
+    def test_priors(self):
+        m1= default_mbb()
+        phot=gen_phot()
+        m1.fit(phot=phot,niter=100,params=['L','z'],
+               restframe=False,priors = {'z':dict(mu=4.0,sigma=0.2)})
+        loss = np.abs(m1.z - 4.0)
+        self.assertLess(loss, 0.8)  #4-sigma
 
-    if test[6]:
-        m7 = MBB(z=2,L=12,T=45,beta=2.0,pl=False,opthin=True)
-        m7.fit(phot=([160/3., 250/3.,  850/3., 1200/3.],[0.0025,0.0041,0.0028,0.0007],[0.00032,0.0012,0.00032,0.00032]), uplims=[True, True, False, False],niter=400,params=['N','T','beta'],restframe=True)
-        print(m7.eval(850,z=2).value*1000,'mJy')
-        m7.plot_sed(obs_frame=True)
-        plt.title('m7')
-
-    if test[7]:
-        m8 = MBB(z=2,L=12,T=45,beta=2.0,pl=True,opthin=False)
-        m8.fit(phot=([160/3., 250/3.,  850/3., 1200/3.],[0.0015,0.0035,0.0021,0.0007],[0.00032,0.0009,0.00032,0.00032]),niter=100,params=['N','T','z'],restframe=True)
-        m8.plot_sed(obs_frame=True)
-        plt.title('m8')
-        m8.plot_corner()
-
-    plt.show()
+    def test_posteriors(self):
+        niter = 300
+        nwalkers = 100
+        sample_by = 10
+        m1 = default_mbb(pl=False, opthin=True, rand=True)
+        phot = gen_phot(nbands=6)
+        fit = m1.fit(phot, uplims = (phot[0]<200), nwalkers=nwalkers, niter=niter, nburn=400, ncores=12, params=['L','beta','T'])
+        beta_q = m1.post_percentile('beta', q=[16,50,84])
+        for b in beta_q:
+            self.assertGreater(b, 0)
+            self.assertLess(b, 5.0)
+        frac_loss = np.abs(beta_q[1]-m1.beta)/beta_q[1]
+        self.assertLess(frac_loss, 0.01)
+        T_chain = m1.posterior('T', sample_by=sample_by)
+        self.assertEqual(len(T_chain), niter*nwalkers//sample_by)
+        self.assertAlmostEqual(np.median(T_chain), np.squeeze(m1.post_percentile('T', q=[50], sample_by=sample_by)), places=1)
