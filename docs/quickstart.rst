@@ -186,6 +186,9 @@ The ModifiedBlackbody class also includes a few helper functions and attributes 
 Flux at a given wavelength:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+To get the model flux at a given wavelength, pass a value or array of wavelengths (in micron) to ``eval()``. By default, this assumes the observed frame, 
+but you can get the flux at a rest-frame wavelength by passing ``z = 0``.
+
 .. code-block:: python
     
     m.eval(1200) #wl in microns, observed frame by default
@@ -199,7 +202,7 @@ Flux at a given wavelength:
     
     import astropy.units as u
 
-    np.round(m.eval(100, z=0).to(u.mJy), 3) #rest frame
+    np.round(m.eval(100, z=0).to(u.mJy), 3) #rest frame 100um
 
 
 .. code-block:: python
