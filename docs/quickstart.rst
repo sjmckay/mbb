@@ -233,7 +233,7 @@ Dust mass:
 
 .. code-block:: python
     
-    8.801244720863213
+    8.804948529939795
 
 Peak wavelength of the dust emission (rest frame):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -245,8 +245,7 @@ Peak wavelength of the dust emission (rest frame):
 
 .. code-block:: python
     
-    106.51370243412198 micron
-
+    108.2946298908265 micron
 
 
 Multiprocessing
