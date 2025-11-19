@@ -117,7 +117,7 @@ By default, uniform priors are assumed on all the fit parameters, but you can ch
 Each key of ``priors`` should be the name of a parameter, and each value is either:
 
 1. a dictionary with keywords ``mu`` and ``sigma``, to specify Gaussian priors
-2. your own function, which takes the parameter as an argument and returns the probability density.
+2. your own function, which takes the parameter as an argument and returns the probability density of that parameter value.
 
 .. code-block:: python
 
@@ -137,7 +137,7 @@ Each key of ``priors`` should be the name of a parameter, and each value is eith
 Accessing the fit results
 -------------------------
 
-To access the percentiles of the posterior distribition for any parameter in the fit:
+To access the percentiles of the posterior distribution for any parameter in the fit:
 
 .. code-block:: python
 
@@ -186,8 +186,8 @@ The ModifiedBlackbody class also includes a few helper functions and attributes 
 Flux at a given wavelength:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To get the model flux at a given wavelength, pass a value or array of wavelengths (in micron) to ``eval()``. By default, this assumes the observed frame, 
-but you can get the flux at a rest-frame wavelength by passing ``z = 0``.
+To get the model flux at a given wavelength, pass a value or array of wavelengths (in micron) to ``eval()``. By default, this assumes observed-frame wavelengths, 
+but you can specify a rest-frame wavelength by passing ``z = 0`` (i.e., shifting the observed SED to :math:`z = 0`).
 
 .. code-block:: python
     
