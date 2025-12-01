@@ -1,5 +1,9 @@
 # mbb
 
+
+[![DOI](https://zenodo.org/badge/769329531.svg)](https://doi.org/10.5281/zenodo.17781466)
+
+
 **mbb** is an implementation of a modified blackbody (MBB) model, commonly used for fitting the spectral energy distributions (SEDs) of dusty galaxies. 
 
 Feel free to suggest updates/point out issues on the [GitHub page](https://github.com/mckay-sjm/mbb_model).
