@@ -81,3 +81,7 @@ class TestBasicMBB(unittest.TestCase):
         T_chain = m1.posterior('T', sample_by=sample_by)
         self.assertEqual(len(T_chain), niter*nwalkers//sample_by)
         self.assertAlmostEqual(np.median(T_chain), np.squeeze(m1.post_percentile('T', q=[50], sample_by=sample_by)), places=1)
+            
+    
+if __name__ == '__main__':
+    unittest.main()

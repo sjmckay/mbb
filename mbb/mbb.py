@@ -13,6 +13,7 @@ import corner
 import sys
 import warnings
 from copy import deepcopy
+import pickle
 
 # from astropy.table import Table, QTable
 # from astropy.io import fits
@@ -665,15 +666,18 @@ class ModifiedBlackbody:
         return lp + self._loglike(params, **kwargs)
 
 
-    def save_out_full(self,filepath):
-        """write out full MBB including fit and sampler (not yet implmented)"""
-        raise NotImplementedError()
+    def save(self,file, protocol=None):
+        """save out ModifiedBlackbody (using pickle) to file in binary format, including fit and sampler"""
+        if protocol is None: protocol=pickle.HIGHEST_PROTOCOL #option to specify is for compatibility
+        with open(file, 'wb') as f:
+            pickle.dump(self, f, protocol=protocol)
     
 
     @classmethod
-    def restore_from_file(self,filepath):
-        """read in full MBB including fit and sampler (not yet implemented)"""
-        raise NotImplementedError()
-    
+    def from_file(self, file):
+        """load in saved ModifiedBlackbody from file"""
+        with open(file, 'rb') as f:
+            m = pickle.load(f)
+        return m
 
 

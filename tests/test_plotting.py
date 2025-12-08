@@ -34,3 +34,7 @@ class TestPlots(unittest.TestCase):
         plt.title('m4')
         m4.plot_corner()
         plt.show(block=False)
+    
+    
+if __name__ == '__main__':
+    unittest.main()

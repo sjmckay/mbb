@@ -33,3 +33,7 @@ class TestPerformance(unittest.TestCase):
         end2 = time.time()
         self.assertLess(end2-start2, 120) #shouldn't take extra long to fit second time
         self.assertLess((end2-start2)/(end1-start1), 4) #should scale as less than n**2
+    
+    
+if __name__ == '__main__':
+    unittest.main()
