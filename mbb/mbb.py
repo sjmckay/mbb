@@ -306,13 +306,13 @@ class ModifiedBlackbody:
 
     def update(self, L=None, T=None, beta=None,z=None,alpha=None,l0=None):
         """ update modified blackbody parameters (not the underlying model)."""
+        if L is None: L = self.L
         self._update_N(T=T, beta=beta,z=z,alpha=alpha,l0=l0)
-        if L: #update N and L consistently
+        Lcurr = np.log10(self.get_luminosity((8,1000)).value)
+        while((Lcurr > (L+0.0001)) | (Lcurr < (L-0.0001))):
+            self.N = self.N * (L/Lcurr)
             Lcurr = np.log10(self.get_luminosity((8,1000)).value)
-            while((Lcurr > (L+0.0001)) | (Lcurr < (L-0.0001))):
-                self.N = self.N * (L/Lcurr)
-                Lcurr = np.log10(self.get_luminosity((8,1000)).value)
-            self.L = np.round(Lcurr,2)
+        self.L = np.round(Lcurr,2)
 
 
     def _update_N(self, N=None, T=None, beta=None,z=None,alpha=None,l0=None):
@@ -424,11 +424,14 @@ class ModifiedBlackbody:
         return fig
 
     def eval(self, wl,z=None):
-        """Evaluate MBB at wavelength
+        """Evaluate MBB at a given wavelength
         
-        Return evaluation of this MBB's function if observed at the given wavelengths wl
+        Return evaluation of this MBB's model if observed at the given wavelengths wl
         shifted to redshift z, in Jy. Set z=0 to get rest-frame evaluation. Default is to 
         give observed-frame flux.
+
+        Note that this function is not luminosity-preserving...i.e., it does not change the underlying MBB parameters and will simply shift the SED to the redshift without applying any dimming. 
+        To get a constant luminosity at different redshifts, use MBB.update(z=new_z) to update the MBB parameters to be consistent with the new redshift, and then use MBB.eval(wl) to get the SED.
 
         Args:
             wl (float): wavelength(s) in micron
@@ -444,7 +447,7 @@ class ModifiedBlackbody:
 
 
     def _eval_mbb(self, wl, N, T, beta, z=0,alpha=2,l0=200):
-        """Return evaluation of this MBB's function but with variable parameters. See docs for eval()"""
+        """Return evaluation of this MBB's model but with variable parameters. See docs for eval()"""
         return self._model(wl/(1+z),N=N,beta=beta,T=T, z=z,alpha=alpha,l0=l0)*u.Jy
 
 
