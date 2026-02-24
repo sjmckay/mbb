@@ -305,7 +305,7 @@ class ModifiedBlackbody:
             
 
     def update(self, L=None, T=None, beta=None,z=None,alpha=None,l0=None):
-        """ update modified blackbody parameters (not the underlying model)."""
+        """update specified modified blackbody parameters (not the underlying model), keeping others constant."""
         if L is None: L = self.L
         self._update_N(T=T, beta=beta,z=z,alpha=alpha,l0=l0)
         Lcurr = np.log10(self.get_luminosity((8,1000)).value)
