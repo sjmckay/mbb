@@ -4,10 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mbb"
-version = "0.5.2"
+version = "0.5.3"
 readme = "README.md"
 description = "Implementation of a modified blackbody (MBB) model, used for fitting the spectral energy distributions of dusty galaxies."
-
+authors = [
+  { name="Stephen McKay", email="sjmckay12@gmail.com" },
+]
 
 dependencies = [
 "matplotlib",
