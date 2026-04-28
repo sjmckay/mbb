@@ -108,6 +108,13 @@ class ModifiedBlackbody:
     
     @property 
     def phot(self):
+        """Photometry (observed frame) used for fitting. Note that wavelengths are stored as rest-frame internally, 
+        so a conversion is applied when returning these values in observed frame."""
+        return (self.phot[0]*(1.0+self.z), self.phot[1], self.phot[2])
+        
+    @property 
+    def phot_rf(self):
+        """Photometry (rest frame) used for fitting. """
         return self._phot
 
     @property 
