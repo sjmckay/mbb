@@ -157,7 +157,7 @@ class ModifiedBlackbody:
 
         Args:
             phot (array-like, 3 x N): wavelengths and photometry, arranged as a 3 x N array (wavelength, flux, error). 
-            Wavelengths should be given as rest-frame values.
+            Wavelengths are treated as observed-frame unless ``restframe`` is set to ``True``.
             uplims (bool, array-like of length N): whether each band in phot is a upper limit (limit equal to flux if > error, otherwise limit = error) 
             nwalkers (int): how many walkers should be used in the MCMC fit. 
             nburn (int): number of MCMC steps to discard (default is 1000)
