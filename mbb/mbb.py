@@ -143,7 +143,7 @@ class ModifiedBlackbody:
             Percentiles of the posterior (e.g., to measure the 68% confidence interval) can be obtained with the ``post_percentile()`` method.
 
         The ``fit_result`` attribute is a dictionary containing the following:
-            - ``sampler``: an ``emcee.EnsembleSampler`` representing the chain of walker values from the fit.
+            - ``sampler``: an ``emcee.EnsembleSampler`` representing the chain of walker values from the fit. The parameter values are ordered in the same order as the ``params`` argument passed to ``fit()``.
             - ``chi2``: the raw chi-squared value at the end of the fitting process.
             - ``n_params``: the number of fitted parameters.
             - ``n_bands``: the number of bands in the fit (the length of ``phot``)
@@ -183,6 +183,9 @@ class ModifiedBlackbody:
             restframe (bool): whether wavelengths in ``phot`` are given in the rest frame (default is observed frame)
             pool (multiprocessing.pool.Pool): an optional pool to pass to the sampler for multiprocessing; otherwise fit() will generate one internally. \
                 Can be faster to use an external Pool if many fits are being performed, also may be useful depending on the OS/kernel being used.
+        
+        Returns:
+            dict: the fit results, which are also stored in the ``fit_result`` attribute of this ModifiedBlackbody. See above for details on the contents of this dictionary.
         """
         self.reset() #flush any previous fit
         phot = np.asarray(phot).reshape(3,-1) # make sure x,y,yerr are in proper shape
