@@ -55,7 +55,10 @@ If you prefer a piecewise power law connected where the slope of the blackbody m
 Fitting photometric data
 ------------------------
 
-Most often, you want to fit a given model to photometric data points. ``mbb`` allows for Bayesian model fitting via the ``fit()`` method, which uses the ``emcee`` package to perform Markov Chain Monte Carlo (MCMC) sampling of the parameter space:
+Most often, you want to fit a given model to photometric data points. ``mbb`` allows for Bayesian model fitting via the ``fit()`` method, which uses the ``emcee`` package to perform Markov Chain Monte Carlo (MCMC) sampling of the parameter space.
+
+The ``phot`` keyword should be a 3 x N array (wavelengths in microns, fluxes in Jy, and errors in Jy). Pass ``restframe=True`` if the wavelengths are in the rest frame, otherwise it will default to observed frame.
+This photometry is stored in the ``phot`` attribute of the MBB instance (observed frame) and the ``phot_rf`` attribute (rest frame). (note: internally all photometry is converted to rest frame).
 
 Note: ``mbb`` handles upper limits correctly in the Bayesian likelihood function. To specify which data should be treated as upper limits, pass a boolean array to the ``uplims``  keyword of ``fit()``. 
 The code assumes that, for each photometric band labeled as an upper limit, the flux value should be used as the limit (accounting for the :math:`1\sigma` uncertainty as well) if it is positive and larger than the :math:`1\sigma` error, otherwise this error is used as the limit. 
