@@ -79,6 +79,7 @@ class ModifiedBlackbody:
             Lcurr = np.log10(self.get_luminosity((8,1000)).value)
         self.L = np.round(Lcurr,2)
         self._to_vary = None
+        self._params = None
         self._fit_result = None
         self._phot=None
         self._priors = None
@@ -132,7 +133,7 @@ class ModifiedBlackbody:
         else:
             raise ValueError(f"'new_cosmo' must be of type astropy.cosmology.Cosmology, got {type(new_cosmo)}")
 
-    def fit(self, phot, uplims=None, params=['L','beta','T'], priors=None, restframe=False,
+    def fit(self, phot, uplims=None, params=['L','T','beta',], priors=None, restframe=False,
             nwalkers=400, nburn = 1000, niter=1000, ncores = NCORES, stepsize=1e-7, pool=None):
         """Fit model to photometry
 
@@ -188,6 +189,7 @@ class ModifiedBlackbody:
         if restframe: self._phot = (phot[0],phot[1],phot[2]) # emcee takes args as a list
         else: self._phot = (phot[0]/(1.0+self.z),phot[1],phot[2])
         self._priors = priors
+        self._params = params
         if uplims is None: self._uplims = np.zeros_like(phot[0],dtype=bool)
         else: 
             uplims = np.atleast_1d(uplims)
@@ -516,7 +518,7 @@ class ModifiedBlackbody:
         return dustmass.to(u.Msun)
 
 
-    def _run_fit(self, p0,nwalkers,nburn,niter,ndim,logprob,ncores=NCORES,to_vary=['N','beta','T'], fixed=None,pool=None):
+    def _run_fit(self, p0,nwalkers,nburn,niter,ndim,logprob,ncores=NCORES,to_vary=['N','T','beta'], fixed=None,pool=None):
         """
         Function to handle the actual MCMC fitting routine of this ModifiedBlackbody's internal model.
 
