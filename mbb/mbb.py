@@ -577,7 +577,7 @@ class ModifiedBlackbody:
         Function to get the median, 16th, and 84th percentile of the ModifedBlackbody spectrum (posterior)
         
         Args:
-            lam (array): wavelength in microns at which to sample the posterior spectrum
+            lam (array): rest-frame wavelength in microns at which to sample the posterior spectrum
             nsamples (int): number of samples to draw from the posterior sampler
 
         Returns:
