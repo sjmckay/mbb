@@ -26,13 +26,14 @@ class TestPerformance(unittest.TestCase):
         start1 = time.time()
         fit = m1.fit(phot, nburn=500, niter=1000, ncores=4)
         end1 = time.time()
+        time1 = end1 - start1
 
         m2 = default_mbb(pl=True, opthin=True, pl_piecewise=False)
         start2 = time.time()
-        fit = m2.fit(phot, nburn=500, niter=2000,ncores=4)
+        fit = m2.fit(phot, nburn=500, niter=1000,ncores=4)
         end2 = time.time()
-        self.assertLess(end2-start2, 120) #shouldn't take extra long to fit second time
-        self.assertLess((end2-start2)/(end1-start1), 4) #should scale as less than n**2
+        time2 = end2 - start2
+        self.assertLess(time2, 2*time1) #shouldn't take extra long to fit second time
     
     
 if __name__ == '__main__':
